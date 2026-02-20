@@ -1,9 +1,29 @@
 import { createSlice } from '@reduxjs/toolkit';
 
+const getStoredUser = () => {
+    try {
+        const raw = localStorage.getItem('user');
+        return raw ? JSON.parse(raw) : null;
+    } catch (error) {
+        return null;
+    }
+};
+
+const getStoredToken = () => {
+    try {
+        return localStorage.getItem('token');
+    } catch (error) {
+        return null;
+    }
+};
+
+const storedUser = getStoredUser();
+const storedToken = getStoredToken();
+
 const initialState = {
-    user: null, // e.g. { id: 1, name: 'Admin', role: 'admin' }
-    isAuthenticated: false,
-    role: 'applicant', // 'admin' | 'applicant'
+    user: storedUser,
+    isAuthenticated: Boolean(storedUser && storedToken),
+    role: storedUser?.role || 'user', // 'admin' | 'user'
 };
 
 const authSlice = createSlice({
@@ -18,7 +38,7 @@ const authSlice = createSlice({
         logout: (state) => {
             state.user = null;
             state.isAuthenticated = false;
-            state.role = 'applicant';
+            state.role = 'user';
         }
     }
 });

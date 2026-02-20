@@ -1,21 +1,24 @@
 import { apiConnector } from "../ApiConnect";
 import { loanEndpoints } from "../Apis";
-import { setLoanData, setRiskScore } from "../../redux/slices/loanSlice";
 
-export function applyLoan(formData, token) {
-  return async (dispatch) => {
-    try {
-      const response = await apiConnector(
-        "POST", 
-        loanEndpoints.APPLY_LOAN_API, 
-        formData, 
-        { Authorization: `Bearer ${token}` }
-      );
-      
-      dispatch(setLoanData(response.data.loan));
-      dispatch(setRiskScore(response.data.riskAnalysis));
-    } catch (error) {
-      console.log("LOAN APPLICATION ERROR:", error);
-    }
-  };
-}
+const authHeaders = (token) => ({
+  Authorization: `Bearer ${token}`,
+});
+
+export const submitLoanService = (payload, token) => {
+  return apiConnector(
+    "POST",
+    loanEndpoints.SUBMIT_LOAN_API,
+    payload,
+    authHeaders(token)
+  );
+};
+
+export const getUserLoansService = (token) => {
+  return apiConnector("GET", loanEndpoints.GET_USER_LOANS, null, authHeaders(token));
+};
+
+export const getLoanDetailsService = (loanId, token) => {
+  const endpoint = loanEndpoints.GET_LOAN_DETAILS.replace(":id", loanId);
+  return apiConnector("GET", endpoint, null, authHeaders(token));
+};

@@ -1,16 +1,17 @@
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Scale, CheckCircle2, ShieldAlert, AlertTriangle, ChevronRight, Activity } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import { getAdminFairnessMetricsService } from '../../services/Operations';
 
-const demographicData = [
+const fallbackDemographicData = [
   { group: 'Demographic A', approvals: 84, target: 85, rejections: 16 },
   { group: 'Demographic B', approvals: 82, target: 85, rejections: 18 },
   { group: 'Demographic C', approvals: 86, target: 85, rejections: 14 },
   { group: 'Demographic D', approvals: 79, target: 85, rejections: 21 },
 ];
 
-const fairnessMetrics = [
+const fallbackFairnessMetrics = [
    { name: 'Demographic Parity Ratio', value: '0.96', target: '> 0.80', status: 'pass' },
    { name: 'Equal Opportunity Rate', value: '1.02', target: '0.90 - 1.10', status: 'pass' },
    { name: 'Predictive Equality', value: '0.98', target: '0.90 - 1.10', status: 'pass' },
@@ -18,6 +19,48 @@ const fairnessMetrics = [
 ];
 
 const FairnessDashboard = () => {
+  const [reports, setReports] = useState([]);
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    const loadFairness = async () => {
+      try {
+        const response = await getAdminFairnessMetricsService(token);
+        setReports(Array.isArray(response.data) ? response.data : []);
+      } catch (error) {
+        setReports([]);
+      }
+    };
+
+    loadFairness();
+  }, []);
+
+  const demographicData = useMemo(() => {
+    if (!reports.length) return fallbackDemographicData;
+    return reports.map((report) => ({
+      group: report.group || "Unknown",
+      approvals: Math.round((report.approvalRate || 0) * 100),
+      target: 85,
+      rejections: Math.round((report.rejectionRate || 0) * 100),
+    }));
+  }, [reports]);
+
+  const fairnessMetrics = useMemo(() => {
+    if (!reports.length) return fallbackFairnessMetrics;
+    const avgBias =
+      reports.reduce((sum, r) => sum + Number(r.biasScore || 0), 0) / reports.length;
+    return [
+      {
+        name: "Average Bias Score",
+        value: avgBias.toFixed(2),
+        target: "<= 0.10",
+        status: avgBias <= 0.1 ? "pass" : "warn",
+      },
+    ];
+  }, [reports]);
+
   return (
     <div className="max-w-7xl mx-auto w-full space-y-8">
       {/* Header */}

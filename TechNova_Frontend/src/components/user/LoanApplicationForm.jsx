@@ -2,6 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronRight, ChevronLeft, CheckCircle, Shield } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useLoan } from '../../hooks/useLoan';
 
 // Redux
 import { useAppDispatch, useAppSelector } from '../../hooks/useAppDispatch';
@@ -11,7 +12,8 @@ import {
   nextStep,
   prevStep,
   submitApplicationStart,
-  submitApplicationSuccess
+  submitApplicationSuccess,
+  submitApplicationFailure
 } from '../../redux/slices/loanSlice';
 import { setDecisionData, setDecisionLoading } from '../../redux/slices/riskSlice';
 
@@ -46,6 +48,7 @@ const LoanApplicationForm = () => {
 
   // 2. Get Application State
   const applicationState = useAppSelector(selectApplication);
+  const { submitLoan } = useLoan();
 
   // Destructure with defaults to ensure we don't crash if loanSlice is resetting
   const { formData = {}, currentStep = 0, submissionState = 'idle' } = applicationState || {};
@@ -56,37 +59,48 @@ const LoanApplicationForm = () => {
     dispatch(updateFormData({ [field]: value }));
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (currentStep < steps.length - 1) {
       dispatch(nextStep());
     } else {
       dispatch(submitApplicationStart());
       dispatch(setDecisionLoading(true));
+      const monthlyIncome = Math.round((Number(formData.income) || 0) / 12);
+      const payload = {
+        amount: Number(formData.loanAmount) || 0,
+        purpose: formData.purpose || "General purpose",
+        tenureMonths: 12,
+        monthlyIncome,
+      };
+
+      const result = await submitLoan(payload);
+      if (!result.ok) {
+        dispatch(submitApplicationFailure("Loan submission failed"));
+        dispatch(setDecisionLoading(false));
+        return;
+      }
+
+      dispatch(submitApplicationSuccess());
+
+      const income = Number(formData.income) || 0;
+      const debtAmount = Number(formData.loanAmount) || 0;
+      let baseScore = 600;
+      baseScore += (income / 1000) * 1.5;
+      baseScore -= (debtAmount / 1000) * 2;
+      const finalScore = Math.min(Math.max(Math.round(baseScore), 300), 850);
+
+      dispatch(setDecisionData({
+        applicationId: result.data?._id || `APP-${Math.floor(Math.random() * 10000)}-X4`,
+        score: finalScore,
+        features: [
+          { name: 'Income to Debt Ratio', impact: 'high', positive: income > debtAmount * 2, description: income > debtAmount * 2 ? 'Your current income comfortably covers existing debts.' : 'Your requested loan poses a high ratio strain.' },
+          { name: 'Credit History Length', impact: 'medium', positive: true, description: 'A long, established credit history shows a consistent pattern.' },
+        ],
+        suggestions: [
+          { title: 'Reduce Credit Card Balances', description: 'Lowering your credit utilization could boost your score further.' }
+        ]
+      }));
       navigate('/decision');
-
-      setTimeout(() => {
-        dispatch(submitApplicationSuccess());
-
-        const income = Number(formData.income) || 0;
-        const debtAmount = Number(formData.loanAmount) || 0;
-        let baseScore = 600;
-        baseScore += (income / 1000) * 1.5;
-        baseScore -= (debtAmount / 1000) * 2;
-
-        const finalScore = Math.min(Math.max(Math.round(baseScore), 300), 850);
-
-        dispatch(setDecisionData({
-          applicationId: `APP-${Math.floor(Math.random() * 10000)}-X4`,
-          score: finalScore,
-          features: [
-            { name: 'Income to Debt Ratio', impact: 'high', positive: income > debtAmount * 2, description: income > debtAmount * 2 ? 'Your current income comfortably covers existing debts.' : 'Your requested loan poses a high ratio strain.' },
-            { name: 'Credit History Length', impact: 'medium', positive: true, description: 'A long, established credit history shows a consistent pattern.' },
-          ],
-          suggestions: [
-            { title: 'Reduce Credit Card Balances', description: 'Lowering your credit utilization could boost your score further.' }
-          ]
-        }));
-      }, 1500);
     }
   };
 

@@ -1,14 +1,42 @@
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { FileText, Activity, ArrowRight, CheckCircle2, Clock, AlertCircle, PlayCircle } from 'lucide-react';
+import { getProfileService, getUserLoansService } from '../services/Operations';
 
 const UserDashboard = () => {
-    // Mock data for the demonstration
-    const recentApplications = [
-        { id: 'APP-8921A', amount: '$45,000', status: 'approved', date: 'Oct 12, 2023', score: 742 },
-        { id: 'APP-7643B', amount: '$12,500', status: 'pending', date: 'Oct 24, 2023', score: '--' },
-    ];
+    const [profile, setProfile] = useState(null);
+    const [recentApplications, setRecentApplications] = useState([]);
+
+    useEffect(() => {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+
+        const loadDashboard = async () => {
+            try {
+                const [profileRes, loansRes] = await Promise.all([
+                    getProfileService(token),
+                    getUserLoansService(token),
+                ]);
+                setProfile(profileRes.data);
+                setRecentApplications(Array.isArray(loansRes.data) ? loansRes.data : []);
+            } catch (error) {
+                setRecentApplications([]);
+            }
+        };
+
+        loadDashboard();
+    }, []);
+
+    const normalizedApplications = useMemo(() => {
+        return recentApplications.slice(0, 5).map((loan) => ({
+            id: loan._id,
+            amount: `$${Number(loan.amount || 0).toLocaleString()}`,
+            status: loan.status || 'pending',
+            date: new Date(loan.createdAt).toLocaleDateString(),
+            score: '--',
+        }));
+    }, [recentApplications]);
 
     const getStatusColor = (status) => {
         switch (status) {
@@ -35,7 +63,7 @@ const UserDashboard = () => {
                 {/* Header Section */}
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
                     <div>
-                        <h1 className="text-3xl font-[900] text-slate-900 tracking-tight mb-2">Welcome back, John!</h1>
+                        <h1 className="text-3xl font-[900] text-slate-900 tracking-tight mb-2">Welcome back, {profile?.name || 'User'}!</h1>
                         <p className="text-slate-500 font-medium">Here is a summary of your loan applications and credit profile.</p>
                     </div>
                     <Link to="/apply" className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-primary-600 text-white rounded-xl text-sm font-bold shadow-soft hover:bg-primary-700 hover:-translate-y-0.5 transition-all">
@@ -59,7 +87,7 @@ const UserDashboard = () => {
                             </div>
 
                             <div className="space-y-4">
-                                {recentApplications.map((app, index) => (
+                                {normalizedApplications.map((app, index) => (
                                     <div key={index} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-5 rounded-2xl bg-slate-50 border border-slate-100 hover:border-slate-200 transition-colors gap-4">
                                         <div className="flex items-center gap-4">
                                             <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${app.status === 'approved' ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>
@@ -84,7 +112,7 @@ const UserDashboard = () => {
                                     </div>
                                 ))}
 
-                                {recentApplications.length === 0 && (
+                                {normalizedApplications.length === 0 && (
                                     <div className="text-center py-12 rounded-2xl border border-dashed border-slate-200">
                                         <FileText className="w-12 h-12 text-slate-300 mx-auto mb-3" />
                                         <h3 className="font-bold text-slate-700 mb-1">No applications yet</h3>

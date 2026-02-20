@@ -2,7 +2,7 @@ import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAppSelector } from '../../hooks/useAppDispatch';
 import { selectAuth } from '../../redux/slices/authSlice';
 
-const ProtectedRoute = ({ allowedRoles = ['applicant', 'admin'] }) => {
+const ProtectedRoute = ({ allowedRoles = ['user', 'admin'] }) => {
     const { isAuthenticated, user, role } = useAppSelector(selectAuth);
     const location = useLocation();
 

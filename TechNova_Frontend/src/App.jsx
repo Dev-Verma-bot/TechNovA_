@@ -19,6 +19,7 @@ const Register = lazy(() => import('./pages/Register'));
 const UserDashboard = lazy(() => import('./pages/UserDashboard'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 const About = lazy(() => import('./pages/About'))
+const LogoutSuccess = lazy(() => import('./pages/LogoutSuccess'));
 
 // User Components
 const LoanApplicationForm = lazy(() => import('./components/user/LoanApplicationForm'));
@@ -41,11 +42,12 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/logout-success" element={<LogoutSuccess />} />
             <Route path="/simulator" element={<WhatIfSimulator />} />
             <Route path="/about" element={<About />} />
 
-            {/* Protected Applicant Routes: Require 'applicant' or 'admin' role */}
-            <Route element={<ProtectedRoute allowedRoles={['applicant', 'admin']} />}>
+            {/* Protected User Routes */}
+            <Route element={<ProtectedRoute allowedRoles={['user', 'admin']} />}>
               <Route path="/dashboard" element={<UserDashboard />} />
               <Route path="/apply" element={<LoanApplicationForm />} />
               <Route path="/decision" element={<RiskResultCard />} />

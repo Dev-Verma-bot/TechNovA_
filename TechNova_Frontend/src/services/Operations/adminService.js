@@ -1,22 +1,24 @@
 import { apiConnector } from "../ApiConnect";
-import { authEndpoints } from "../Apis";
-import { setToken, setUser, setLoading } from "../../redux/slices/authSlice";
+import { adminEndpoints } from "../Apis";
 
-export function login(email, password, navigate) {
-  return async (dispatch) => {
-    dispatch(setLoading(true));
-    try {
-      const response = await apiConnector("POST", authEndpoints.LOGIN_API, { email, password });
-      
-      if (!response.data.success) throw new Error(response.data.message);
+const authHeaders = (token) => ({
+  Authorization: `Bearer ${token}`,
+});
 
-      dispatch(setToken(response.data.token));
-      dispatch(setUser(response.data.user));
-      localStorage.setItem("token", JSON.stringify(response.data.token));
-      navigate("/dashboard");
-    } catch (error) {
-      console.log("LOGIN ERROR:", error);
-    }
-    dispatch(setLoading(false));
-  };
-}
+export const getAllApplicationsService = (token) => {
+  return apiConnector("GET", adminEndpoints.GET_ALL_APPS, null, authHeaders(token));
+};
+
+export const approveRejectService = (applicationId, payload, token) => {
+  const endpoint = adminEndpoints.APPROVE_REJECT.replace(":id", applicationId);
+  return apiConnector("PATCH", endpoint, payload, authHeaders(token));
+};
+
+export const getAdminFairnessMetricsService = (token) => {
+  return apiConnector(
+    "GET",
+    adminEndpoints.GET_FAIRNESS_METRICS,
+    null,
+    authHeaders(token)
+  );
+};

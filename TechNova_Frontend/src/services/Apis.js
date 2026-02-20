@@ -1,21 +1,39 @@
-const BASE_URL = import.meta.env.VITE_APP_BASE_URL || "http://localhost:5000/api/v1";
+const BASE_URL =
+  import.meta.env.VITE_APP_BASE_URL || "http://localhost:5000/api/v1";
 
-// Auth Endpoints
+/* ---------------- AUTH ---------------- */
 export const authEndpoints = {
-    LOGIN_API: BASE_URL + "/auth/login",
-    SIGNUP_API: BASE_URL + "/auth/signup",
-    RESETPASSWORD_API: BASE_URL + "/auth/reset-password",
+  LOGIN_API: `${BASE_URL}/auth/login`,
+  SIGNUP_API: `${BASE_URL}/auth/signup`,
+  RESET_PASSWORD_API: `${BASE_URL}/auth/reset-password`,
 };
 
-// Loan/Application Endpoints
+/* ---------------- USER ---------------- */
+export const userEndpoints = {
+  GET_PROFILE: `${BASE_URL}/user/profile`,
+  UPDATE_PROFILE: `${BASE_URL}/user/update`,
+};
+
+/* ---------------- LOAN ---------------- */
 export const loanEndpoints = {
-    SUBMIT_LOAN_API: BASE_URL + "/loan/apply",
-    GET_USER_LOANS: BASE_URL + "/loan/my-applications",
-    GET_LOAN_DETAILS: BASE_URL + "/loan/details",
+  SUBMIT_LOAN_API: `${BASE_URL}/loan/apply`,
+  GET_USER_LOANS: `${BASE_URL}/loan/my-applications`,
+  GET_LOAN_DETAILS: `${BASE_URL}/loan/details/:id`,
 };
 
-// Admin/Risk Endpoints
+/* ---------------- RISK ---------------- */
+export const riskEndpoints = {
+  GET_RISK_ANALYSIS: `${BASE_URL}/risk/analysis/:loanId`,
+};
+
+/* ---------------- ADMIN ---------------- */
 export const adminEndpoints = {
-    GET_ALL_APPS: BASE_URL + "/admin/all-loans",
-    FAIRNESS_STATS: BASE_URL + "/admin/fairness-metrics",
+  GET_ALL_APPS: `${BASE_URL}/admin/all-loans`,
+  APPROVE_REJECT: `${BASE_URL}/admin/update-status/:id`,
+  GET_FAIRNESS_METRICS: `${BASE_URL}/admin/fairness-metrics`,
+};
+
+/* ---------------- FAIRNESS ---------------- */
+export const fairnessEndpoints = {
+  FAIRNESS_STATS: `${BASE_URL}/fairness/report`,
 };

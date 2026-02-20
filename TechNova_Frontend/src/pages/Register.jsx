@@ -1,34 +1,60 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Shield, Mail, Lock, ArrowRight, CheckCircle2, Building2, User } from 'lucide-react';
+import { Shield, Mail, Lock, ArrowRight, CheckCircle2, User, Eye, EyeOff } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
 
 const Register = () => {
     const [formData, setFormData] = useState({
-        firstName: '',
-        lastName: '',
-        company: '',
+        name: '',
         email: '',
         password: '',
+        confirmPassword: '',
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [submitError, setSubmitError] = useState('');
 
     const navigate = useNavigate();
+    const { register } = useAuth();
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-    const handleRegister = (e) => {
+    const handleRegister = async (e) => {
         e.preventDefault();
         setIsSubmitting(true);
+        setSubmitError('');
 
-        // Simulate API call for registration
-        setTimeout(() => {
+        const payload = {
+            name: formData.name.trim(),
+            email: formData.email,
+            password: formData.password,
+        };
+
+        if (!payload.name) {
             setIsSubmitting(false);
-            // After successful registration, route to login
-            navigate('/login');
-        }, 1500);
+            setSubmitError('Name is required.');
+            return;
+        }
+
+        if (formData.password !== formData.confirmPassword) {
+            setIsSubmitting(false);
+            setSubmitError('Passwords do not match.');
+            return;
+        }
+
+        const result = await register(payload);
+        setIsSubmitting(false);
+
+        if (!result.ok) {
+            setSubmitError('Registration failed. Please check your details.');
+            return;
+        }
+
+        navigate('/login');
     };
 
     return (
@@ -58,49 +84,16 @@ const Register = () => {
                     </div>
 
                     <form onSubmit={handleRegister} className="space-y-4">
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-2">First Name</label>
-                                <div className="relative">
-                                    <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                                    <input
-                                        type="text"
-                                        name="firstName"
-                                        value={formData.firstName}
-                                        onChange={handleChange}
-                                        placeholder="John"
-                                        required
-                                        className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-[12px] text-[15px] font-medium text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all placeholder:text-slate-400"
-                                    />
-                                </div>
-                            </div>
-                            <div>
-                                <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-2">Last Name</label>
-                                <div className="relative">
-                                    <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                                    <input
-                                        type="text"
-                                        name="lastName"
-                                        value={formData.lastName}
-                                        onChange={handleChange}
-                                        placeholder="Doe"
-                                        required
-                                        className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-[12px] text-[15px] font-medium text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all placeholder:text-slate-400"
-                                    />
-                                </div>
-                            </div>
-                        </div>
-
                         <div>
-                            <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-2">Company Name</label>
+                            <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-2">Full Name</label>
                             <div className="relative">
-                                <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                                 <input
                                     type="text"
-                                    name="company"
-                                    value={formData.company}
+                                    name="name"
+                                    value={formData.name}
                                     onChange={handleChange}
-                                    placeholder="Acme Financial"
+                                    placeholder="John Doe"
                                     required
                                     className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-[12px] text-[15px] font-medium text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all placeholder:text-slate-400"
                                 />
@@ -108,7 +101,7 @@ const Register = () => {
                         </div>
 
                         <div>
-                            <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-2">Work Email</label>
+                            <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-2">Email</label>
                             <div className="relative">
                                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                                 <input
@@ -116,7 +109,7 @@ const Register = () => {
                                     name="email"
                                     value={formData.email}
                                     onChange={handleChange}
-                                    placeholder="john@acmefinancial.com"
+                                    placeholder="john@example.com"
                                     required
                                     className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-[12px] text-[15px] font-medium text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all placeholder:text-slate-400"
                                 />
@@ -128,18 +121,51 @@ const Register = () => {
                             <div className="relative">
                                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                                 <input
-                                    type="password"
+                                    type={showPassword ? "text" : "password"}
                                     name="password"
                                     value={formData.password}
                                     onChange={handleChange}
                                     placeholder="Create a strong password"
                                     required
-                                    className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-[12px] text-[15px] font-medium text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all placeholder:text-slate-400"
+                                    className="w-full pl-12 pr-12 py-3.5 bg-slate-50 border border-slate-200 rounded-[12px] text-[15px] font-medium text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all placeholder:text-slate-400"
                                 />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword((prev) => !prev)}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-500 hover:text-slate-700"
+                                >
+                                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                                </button>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-2">Confirm Password</label>
+                            <div className="relative">
+                                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                                <input
+                                    type={showConfirmPassword ? "text" : "password"}
+                                    name="confirmPassword"
+                                    value={formData.confirmPassword}
+                                    onChange={handleChange}
+                                    placeholder="Confirm your password"
+                                    required
+                                    className="w-full pl-12 pr-12 py-3.5 bg-slate-50 border border-slate-200 rounded-[12px] text-[15px] font-medium text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all placeholder:text-slate-400"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowConfirmPassword((prev) => !prev)}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-500 hover:text-slate-700"
+                                >
+                                    {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                                </button>
                             </div>
                         </div>
 
                         <div className="pt-4">
+                            {submitError && (
+                                <p className="mb-3 text-sm font-semibold text-red-600">{submitError}</p>
+                            )}
                             <button
                                 type="submit"
                                 disabled={isSubmitting}

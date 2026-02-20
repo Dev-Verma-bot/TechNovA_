@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Users, FileText, CheckCircle2, TrendingUp, MoreVertical, Search, Clock, ShieldAlert } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
+import { getAllApplicationsService } from '../../services/Operations';
 
 const data = [
   { name: 'Mon', apps: 400, approvals: 240 },
@@ -11,14 +12,6 @@ const data = [
   { name: 'Fri', apps: 189, approvals: 120 },
   { name: 'Sat', apps: 439, approvals: 280 },
   { name: 'Sun', apps: 349, approvals: 210 },
-];
-
-const mockApplications = [
-   { id: 'APP-1029', name: 'Robert Fox', amount: '$15,000', score: 812, status: 'approved', time: '10 mins ago' },
-   { id: 'APP-1028', name: 'Cody Fisher', amount: '$5,500', score: 580, status: 'declined', time: '25 mins ago' },
-   { id: 'APP-1027', name: 'Esther Howard', amount: '$42,000', score: 675, status: 'manual', time: '1 hour ago' },
-   { id: 'APP-1026', name: 'Jenny Wilson', amount: '$1,200', score: 790, status: 'approved', time: '2 hours ago' },
-   { id: 'APP-1025', name: 'Kristin Watson', amount: '$8,000', score: 640, status: 'manual', time: '1 day ago' },
 ];
 
 const StatCard = ({ title, value, change, icon: Icon, colorClass }) => (
@@ -42,6 +35,39 @@ const StatCard = ({ title, value, change, icon: Icon, colorClass }) => (
 );
 
 const AdminDashboard = () => {
+  const [applications, setApplications] = useState([]);
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    const loadApplications = async () => {
+      try {
+        const response = await getAllApplicationsService(token);
+        setApplications(Array.isArray(response.data) ? response.data : []);
+      } catch (error) {
+        setApplications([]);
+      }
+    };
+
+    loadApplications();
+  }, []);
+
+  const totalApplications = applications.length;
+  const approvedCount = applications.filter((app) => app.status === "approved").length;
+  const pendingCount = applications.filter((app) => app.status === "pending").length;
+
+  const tableRows = useMemo(() => {
+    return applications.slice(0, 10).map((app) => ({
+      id: app._id,
+      name: app.userId?.name || "Unknown User",
+      amount: `$${Number(app.amount || 0).toLocaleString()}`,
+      score: "--",
+      status: app.status || "pending",
+      time: app.createdAt ? new Date(app.createdAt).toLocaleString() : "-",
+    }));
+  }, [applications]);
+
   return (
     <div className="max-w-7xl mx-auto w-full space-y-8">
       {/* Header */}
@@ -61,22 +87,22 @@ const AdminDashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
          <StatCard 
             title="Total Applications" 
-            value="12,845" 
-            change={8.2} 
+            value={totalApplications} 
+            change={0} 
             icon={FileText} 
             colorClass={{ bg: 'bg-primary-50', text: 'text-primary-600' }} 
          />
          <StatCard 
             title="Auto-Approved" 
-            value="8,402" 
-            change={12.5} 
+            value={approvedCount} 
+            change={0} 
             icon={CheckCircle2} 
             colorClass={{ bg: 'bg-success/10', text: 'text-success' }} 
          />
          <StatCard 
             title="Manual Review Queue" 
-            value="423" 
-            change={-2.4} 
+            value={pendingCount} 
+            change={0} 
             icon={Users} 
             colorClass={{ bg: 'bg-warning/10', text: 'text-warning' }} 
          />
@@ -176,7 +202,7 @@ const AdminDashboard = () => {
                   </tr>
                </thead>
                <tbody className="text-sm font-medium text-slate-900">
-                  {mockApplications.map((app, idx) => (
+                  {tableRows.map((app, idx) => (
                      <tr key={idx} className="border-b border-slate-100 hover:bg-slate-50/50 transition-colors group">
                         <td className="p-4 pl-6 font-mono text-slate-500 text-xs">{app.id}</td>
                         <td className="p-4 flex items-center gap-3">
@@ -187,14 +213,14 @@ const AdminDashboard = () => {
                         </td>
                         <td className="p-4 text-slate-600">{app.amount}</td>
                         <td className="p-4">
-                           <span className={`px-2 py-1 rounded-md text-xs font-bold ${app.score >= 700 ? 'bg-success/10 text-success' : app.score >= 600 ? 'bg-warning/10 text-warning' : 'bg-danger/10 text-danger'}`}>
-                              {app.score}
+                           <span className={`px-2 py-1 rounded-md text-xs font-bold ${typeof app.score === 'number' ? (app.score >= 700 ? 'bg-success/10 text-success' : app.score >= 600 ? 'bg-warning/10 text-warning' : 'bg-danger/10 text-danger') : 'bg-slate-100 text-slate-500'}`}>
+                               {app.score}
                            </span>
                         </td>
                         <td className="p-4 uppercase text-xs tracking-wider">
                            {app.status === 'approved' && <span className="text-success font-bold flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-success block"></span>Approved</span>}
-                           {app.status === 'declined' && <span className="text-danger font-bold flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-danger block"></span>Declined</span>}
-                           {app.status === 'manual' && <span className="text-warning font-bold flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-warning block"></span>Manual</span>}
+                           {app.status === 'rejected' && <span className="text-danger font-bold flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-danger block"></span>Rejected</span>}
+                           {app.status === 'pending' && <span className="text-warning font-bold flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-warning block"></span>Pending</span>}
                         </td>
                         <td className="p-4 text-slate-400 text-xs whitespace-nowrap">{app.time}</td>
                         <td className="p-4 pr-6 text-right">

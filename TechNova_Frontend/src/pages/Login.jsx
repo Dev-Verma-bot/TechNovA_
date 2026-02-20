@@ -1,43 +1,36 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Shield, Mail, Lock, ArrowRight, CheckCircle2, Building2 } from 'lucide-react';
+import { Shield, Mail, Lock, ArrowRight, CheckCircle2, Building2, Eye, EyeOff } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useDispatch } from 'react-redux';
-import { login } from '../redux/slices/authSlice';
+import { useAuth } from '../hooks/useAuth';
 
 const Login = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [submitError, setSubmitError] = useState('');
 
-    const dispatch = useDispatch();
     const navigate = useNavigate();
+    const { login } = useAuth();
 
-    const handleLogin = (e) => {
+    const handleLogin = async (e) => {
         e.preventDefault();
         setIsSubmitting(true);
+        setSubmitError('');
+        const result = await login(email, password);
+        setIsSubmitting(false);
 
-        // Simulate API call for login
-        setTimeout(() => {
-            // Dummy check to simulate admin vs applicant logic
-            const role = email.includes('admin') ? 'admin' : 'applicant';
-            const user = {
-                id: Math.random().toString(36).substr(2, 9),
-                name: email.split('@')[0],
-                email,
-                role,
-            };
+        if (!result.ok) {
+            setSubmitError('Invalid email or password.');
+            return;
+        }
 
-            dispatch(login(user));
-
-            setIsSubmitting(false);
-
-            if (role === 'admin') {
-                navigate('/admin');
-            } else {
-                navigate('/dashboard');
-            }
-        }, 1500);
+        if (result.user.role === 'admin') {
+            navigate('/admin');
+        } else {
+            navigate('/dashboard');
+        }
     };
 
     return (
@@ -90,18 +83,28 @@ const Login = () => {
                                 <div className="relative">
                                     <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                                     <input
-                                        type="password"
+                                        type={showPassword ? "text" : "password"}
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
                                         placeholder="Enter your password"
                                         required
-                                        className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-[12px] text-[15px] font-medium text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all placeholder:text-slate-400"
+                                        className="w-full pl-12 pr-12 py-3.5 bg-slate-50 border border-slate-200 rounded-[12px] text-[15px] font-medium text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all placeholder:text-slate-400"
                                     />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPassword((prev) => !prev)}
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-500 hover:text-slate-700"
+                                    >
+                                        {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                                    </button>
                                 </div>
                             </div>
                         </div>
 
                         <div className="pt-4">
+                            {submitError && (
+                                <p className="mb-3 text-sm font-semibold text-red-600">{submitError}</p>
+                            )}
                             <button
                                 type="submit"
                                 disabled={isSubmitting}
@@ -126,7 +129,7 @@ const Login = () => {
                     <div className="mt-8 p-4 bg-slate-50 rounded-xl border border-slate-100 flex items-start gap-3">
                         <Shield className="w-5 h-5 text-slate-400 shrink-0 mt-0.5" />
                         <p className="text-[12px] font-medium text-slate-500 leading-relaxed">
-                            Demo Tip: To login to the <span className="font-bold text-slate-700">Admin Panel</span>, use any email containing the word <code className="bg-slate-200 px-1 py-0.5 rounded text-slate-700 font-mono">admin</code> (e.g., admin@fairloan.ai). Otherwise, you will be routed to the Applicant Flow.
+                            Login now uses your backend API and routes based on the user role returned by the server.
                         </p>
                     </div>
                 </div>

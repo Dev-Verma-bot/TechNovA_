@@ -1,0 +1,57 @@
+TechNova_Backend
+│
+├── 📁 Configuration
+│   ├── 📄 db_connect.js
+│   ├── 📄 env_config.js
+│   ├── 📄 cors_config.js
+│   └── 📄 server_config.js
+│
+├── 📁 Controllers
+│   ├── 📄 Auth.js                    # Login / Register
+│   ├── 📄 User.js                    # Dashboard + profile
+│   ├── 📄 Loan.js                    # Apply + status
+│   ├── 📄 Risk.js                    # Prediction + SHAP + WhatIf
+│   ├── 📄 Fairness.js                # Bias + reports
+│   └── 📄 Admin.js                   # Admin dashboard + approvals
+│
+├── 📁 Middlewares
+│   ├── 📄 Auth.js                    # Verify JWT
+│   ├── 📄 Role.js                    # Role-based access
+│   ├── 📄 ErrorHandler.js
+│   ├── 📄 Validator.js
+│   └── 📄 RateLimiter.js
+│
+├── 📁 Modals
+│   ├── 📄 User.js
+│   ├── 📄 LoanApplication.js
+│   ├── 📄 RiskResult.js
+│   ├── 📄 FairnessReport.js
+│   └── 📄 AdminActionLog.js
+│
+├── 📁 Routes
+│   ├── 📄 Auth_route.js
+│   ├── 📄 User_route.js
+│   ├── 📄 Loan_route.js
+│   ├── 📄 Risk_route.js
+│   ├── 📄 Fairness_route.js
+│   └── 📄 Admin_route.js
+│
+├── 📁 Services
+│   ├── 📄 risk_engine.js             # Risk calculation logic
+│   ├── 📄 shap_engine.js             # Feature importance
+│   ├── 📄 fairness_engine.js         # Bias metrics
+│   ├── 📄 loan_processor.js
+│   └── 📄 token_service.js
+│
+├── 📁 Utils
+│   ├── 📄 ApiResponse.js
+│   ├── 📄 ApiError.js
+│   ├── 📄 asyncHandler.js
+│   ├── 📄 constants.js
+│   └── 📄 dataFormatter.js
+│
+├── 📄 App.js                         # Express app config
+├── 📄 server.js                      # Entry point
+├── 📄 .env
+├── ⚙️ package.json
+└── ⚙️ package-lock.json
