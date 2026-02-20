@@ -18,6 +18,7 @@ const Login = lazy(() => import('./pages/Login'));
 const Register = lazy(() => import('./pages/Register'));
 const UserDashboard = lazy(() => import('./pages/UserDashboard'));
 const NotFound = lazy(() => import('./pages/NotFound'));
+const About = lazy(() => import('./pages/About'))
 
 // User Components
 const LoanApplicationForm = lazy(() => import('./components/user/LoanApplicationForm'));
@@ -41,12 +42,14 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/simulator" element={<WhatIfSimulator />} />
+            <Route path="/about" element={<About />} />
 
             {/* Protected Applicant Routes: Require 'applicant' or 'admin' role */}
             <Route element={<ProtectedRoute allowedRoles={['applicant', 'admin']} />}>
               <Route path="/dashboard" element={<UserDashboard />} />
               <Route path="/apply" element={<LoanApplicationForm />} />
               <Route path="/decision" element={<RiskResultCard />} />
+              
             </Route>
 
             {/* 404 Catch-all for UserLayout */}
