@@ -1,0 +1,27 @@
+/* src/components/common/CustomCursor.css */
+
+@media (hover: hover) and (pointer: fine) {
+    * {
+        cursor: none !important;
+    }
+
+    .custom-cursor {
+        position: fixed;
+        top: 0;
+        left: 0;
+        pointer-events: none;
+        z-index: 999999;
+        /* Soft shadow to pop out globally over white and dark backgrounds */
+        filter: drop-shadow(0px 4px 8px rgba(0, 0, 0, 0.15));
+        will-change: transform;
+        /* Anchor center of transforms closely to the tip of the arrow */
+        transform-origin: 4px 4px;
+    }
+}
+
+/* Strictly hide custom cursor on touch devices where native tap is preferred */
+@media (hover: none) {
+    .custom-cursor {
+        display: none !important;
+    }
+}
