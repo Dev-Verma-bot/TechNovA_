@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Shield, Mail, Lock, ArrowRight, CheckCircle2, Building2, Eye, EyeOff } from 'lucide-react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 
 const Login = () => {
+    const location = useLocation();
+    const [loginMode, setLoginMode] = useState(location.state?.mode || 'applicant');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
@@ -13,6 +15,12 @@ const Login = () => {
 
     const navigate = useNavigate();
     const { login } = useAuth();
+
+    useEffect(() => {
+        if (location.state?.mode) {
+            setLoginMode(location.state.mode);
+        }
+    }, [location.state?.mode]);
 
     const handleLogin = async (e) => {
         e.preventDefault();
@@ -55,8 +63,30 @@ const Login = () => {
                             </div>
                             <span className="text-[18px] font-extrabold tracking-tight">FairLoan AI</span>
                         </Link>
-                        <h2 className="text-3xl font-[900] tracking-tight mb-2">Welcome back</h2>
-                        <p className="text-slate-500 font-medium text-[15px]">Sign in to your account to continue.</p>
+                        <h2 className="text-3xl font-[900] tracking-tight mb-2">
+                            {loginMode === 'admin' ? 'Admin Login' : 'Welcome back'}
+                        </h2>
+                        <p className="text-slate-500 font-medium text-[15px]">
+                            {loginMode === 'admin' ? 'Sign in to access the administrator panel.' : 'Sign in to your account to continue.'}
+                        </p>
+                    </div>
+
+                    {/* Login Mode Toggle on the Form */}
+                    <div className="flex items-center p-1 bg-slate-100 rounded-xl mb-6">
+                        <button
+                            type="button"
+                            onClick={() => setLoginMode('applicant')}
+                            className={`flex-1 py-1.5 text-sm font-bold rounded-lg transition-all ${loginMode === 'applicant' ? 'bg-white shadow-sm text-primary-600' : 'text-slate-500 hover:text-slate-700'}`}
+                        >
+                            Applicant
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setLoginMode('admin')}
+                            className={`flex-1 py-1.5 text-sm font-bold rounded-lg transition-all ${loginMode === 'admin' ? 'bg-white shadow-sm text-amber-600' : 'text-slate-500 hover:text-slate-700'}`}
+                        >
+                            Administrator
+                        </button>
                     </div>
 
                     <form onSubmit={handleLogin} className="space-y-5">
@@ -121,9 +151,11 @@ const Login = () => {
                         </div>
                     </form>
 
-                    <p className="mt-8 text-center text-[14px] font-medium text-slate-500">
-                        Don't have an account? <Link to="/register" className="text-primary-600 font-bold hover:text-primary-700">Request access</Link>
-                    </p>
+                    {loginMode !== 'admin' && (
+                        <p className="mt-8 text-center text-[14px] font-medium text-slate-500">
+                            Don't have an account? <Link to="/register" className="text-primary-600 font-bold hover:text-primary-700">Sign Up</Link>
+                        </p>
+                    )}
 
                     {/* Hint */}
                     <div className="mt-8 p-4 bg-slate-50 rounded-xl border border-slate-100 flex items-start gap-3">

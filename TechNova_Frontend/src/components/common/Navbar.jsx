@@ -41,8 +41,8 @@ const Navbar = () => {
             </Link>
 
             <nav className="hidden md:flex items-center gap-8 text-[14px] font-semibold text-slate-500">
-                <Link to="#solutions" className="hover:text-slate-900 transition-colors">Solutions</Link>
-                <Link to="#compliance" className="hover:text-slate-900 transition-colors">Compliance</Link>
+                <Link to="/simulator" className="hover:text-slate-900 transition-colors">Simulator</Link>
+                <Link to="/privacy-policy" className="hover:text-slate-900 transition-colors">Privacy Policy</Link>
                 <Link to="/about" className="hover:text-slate-900 transition-colors">About</Link>
             </nav>
 
@@ -51,20 +51,23 @@ const Navbar = () => {
                     <div className="relative">
                         <button
                             onClick={() => setMenuOpen((prev) => !prev)}
-                            className="inline-flex items-center gap-3 px-3 py-2 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors"
+                            className="inline-flex items-center gap-3 px-2 py-1.5 border border-transparent rounded-full hover:bg-slate-50 transition-all focus:ring-2 focus:ring-primary-500/20"
                         >
-                            <div className="w-8 h-8 rounded-full bg-primary-600 text-white text-xs font-bold flex items-center justify-center">
-                                {initials || <UserCircle2 className="w-4 h-4" />}
+                            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary-500 to-primary-700 text-white shadow-soft flex items-center justify-center text-sm font-extrabold tracking-wide">
+                                {initials || <UserCircle2 className="w-5 h-5" />}
                             </div>
-                            <div className="hidden sm:block text-left">
-                                <p className="text-[13px] font-semibold text-slate-900 leading-tight">
+                            <div className="hidden sm:flex flex-col items-start pr-1">
+                                <p className="text-[14px] font-bold text-slate-800 leading-none mb-1">
                                     {user?.name || 'Profile'}
                                 </p>
-                                <p className="text-[11px] text-slate-500 uppercase tracking-wider">
-                                    {user?.role || 'user'}
-                                </p>
+                                <div className="flex items-center gap-1.5">
+                                    <span className={`w-1.5 h-1.5 rounded-full ${user?.role === 'admin' ? 'bg-amber-500' : 'bg-success'}`}></span>
+                                    <p className="text-[10px] font-extrabold text-slate-500 uppercase tracking-[0.08em] leading-none">
+                                        {user?.role === 'user' ? 'Applicant' : (user?.role || 'Applicant')}
+                                    </p>
+                                </div>
                             </div>
-                            <ChevronDown className="w-4 h-4 text-slate-500" />
+                            <ChevronDown className={`w-4 h-4 text-slate-400 ml-1 transition-transform duration-200 ${menuOpen ? 'rotate-180' : ''}`} />
                         </button>
 
                         {menuOpen && (

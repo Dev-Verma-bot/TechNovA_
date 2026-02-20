@@ -57,7 +57,7 @@ const Footer = () => {
                 </div>
 
                 <div className="md:col-span-2 lg:col-span-1">
-                    <h3 className="font-bold text-white mb-6 text-xs tracking-wider uppercase">Compliance</h3>
+                    <h3 className="font-bold text-white mb-6 text-xs tracking-wider uppercase">Privacy Policy</h3>
                     <ul className="space-y-4 text-sm font-medium text-slate-400">
                         <li><a href="#" className="hover:text-white transition-colors">SOC2 Type II</a></li>
                         <li><a href="#" className="hover:text-white transition-colors">GDPR</a></li>

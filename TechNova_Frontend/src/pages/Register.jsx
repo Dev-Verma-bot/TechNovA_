@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Shield, Mail, Lock, ArrowRight, CheckCircle2, User, Eye, EyeOff } from 'lucide-react';
+import { Shield, Mail, Lock, ArrowRight, CheckCircle2, User, Eye, EyeOff, Phone } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { sendSignupOtpService } from '../services/Operations';
 
 const Register = () => {
     const [formData, setFormData] = useState({
         name: '',
+        phone: '',
         email: '',
         password: '',
         confirmPassword: '',
@@ -15,12 +17,33 @@ const Register = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [submitError, setSubmitError] = useState('');
-
+    const [isSendingOtp, setIsSendingOtp] = useState(false);
+    const [otpMessage, setOtpMessage] = useState('');   
     const navigate = useNavigate();
     const { register } = useAuth();
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
+
+    const handleSendOtp = async () => {
+        setSubmitError('');
+        setOtpMessage('');
+
+        if (!formData.email) {
+            setSubmitError('Enter email first to send OTP.');
+            return;
+        }
+
+        try {
+            setIsSendingOtp(true);
+            await sendSignupOtpService({ email: formData.email });
+            setOtpMessage('OTP sent to your email.');
+        } catch (err) {
+            setSubmitError(err?.response?.data?.message || 'Failed to send OTP.');
+        } finally {
+            setIsSendingOtp(false);
+        }
     };
 
     const handleRegister = async (e) => {
@@ -30,9 +53,13 @@ const Register = () => {
 
         const payload = {
             name: formData.name.trim(),
+            phone: formData.phone.trim(),
             email: formData.email,
             password: formData.password,
+            otp: formData.otp,
         };
+
+
 
         if (!payload.name) {
             setIsSubmitting(false);
@@ -45,7 +72,11 @@ const Register = () => {
             setSubmitError('Passwords do not match.');
             return;
         }
-
+        if (!payload.otp) {
+            setIsSubmitting(false);
+            setSubmitError('OTP is required.');
+            return;
+        }
         const result = await register(payload);
         setIsSubmitting(false);
 
@@ -101,6 +132,22 @@ const Register = () => {
                         </div>
 
                         <div>
+                            <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-2">Phone Number</label>
+                            <div className="relative">
+                                <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                                <input
+                                    type="tel"
+                                    name="phone"
+                                    value={formData.phone}
+                                    onChange={handleChange}
+                                    placeholder="+1 (555) 000-0000"
+                                    required
+                                    className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-[12px] text-[15px] font-medium text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all placeholder:text-slate-400"
+                                />
+                            </div>
+                        </div>
+
+                        <div>
                             <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-2">Email</label>
                             <div className="relative">
                                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
@@ -114,6 +161,32 @@ const Register = () => {
                                     className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-[12px] text-[15px] font-medium text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all placeholder:text-slate-400"
                                 />
                             </div>
+
+                            <div className="mt-2">
+                                <button
+                                    type="button"
+                                    onClick={handleSendOtp}
+                                    disabled={isSendingOtp}
+                                    className="px-4 py-2 bg-slate-900 text-white rounded-lg text-xs font-bold disabled:opacity-70"
+                                >
+                                    {isSendingOtp ? 'Sending OTP...' : 'Send OTP'}
+                                </button>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-2">OTP</label>
+                            <input
+                                type="text"
+                                name="otp"
+                                value={formData.otp}
+                                onChange={handleChange}
+                                placeholder="Enter 6-digit OTP"
+                                required
+                                className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-[12px] text-[15px] font-medium text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all placeholder:text-slate-400"
+                            />
+
+
                         </div>
 
                         <div>
@@ -163,6 +236,9 @@ const Register = () => {
                         </div>
 
                         <div className="pt-4">
+                            {otpMessage && (
+                                <p className="mb-2 text-sm font-semibold text-green-600">{otpMessage}</p>
+                            )}
                             {submitError && (
                                 <p className="mb-3 text-sm font-semibold text-red-600">{submitError}</p>
                             )}

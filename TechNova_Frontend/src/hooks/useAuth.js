@@ -14,11 +14,12 @@ export const useAuth = () => {
     setError("");
     try {
       const response = await loginService({ email, password });
-      const { token, userId, role } = response.data || {};
+      const { token, userId, role, name, email: responseEmail } = response.data || {};
 
       const user = {
         id: userId,
-        email,
+        email: responseEmail || email,
+        name: name,
         role: role || "user",
       };
 

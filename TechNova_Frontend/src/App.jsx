@@ -1,12 +1,14 @@
-import React, { Suspense, lazy } from 'react';
+import React, { Suspense, lazy, useEffect } from 'react';
 import { Routes, Route } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 
 // Layouts
 import UserLayout from './layouts/UserLayout';
 import AdminLayout from './layouts/AdminLayout';
 
-// Auth Wrapper
+// Auth Wrapper & Hooks
 import ProtectedRoute from './components/Auth/ProtectedRoute';
+import { useAuth } from './hooks/useAuth';
 
 // Common Components
 import Loader from './components/common/Loader';
@@ -20,6 +22,7 @@ const UserDashboard = lazy(() => import('./pages/UserDashboard'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 const About = lazy(() => import('./pages/About'))
 const LogoutSuccess = lazy(() => import('./pages/LogoutSuccess'));
+const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
 
 // User Components
 const LoanApplicationForm = lazy(() => import('./components/user/LoanApplicationForm'));
@@ -31,8 +34,16 @@ const AdminDashboard = lazy(() => import('./components/admin/AdminDashboard'));
 const FairnessReport = lazy(() => import('./components/admin/FairnessReport'));
 
 function App() {
+  const { hydrateProfile } = useAuth();
+
+  useEffect(() => {
+    // Automatically fetch real user DB data (e.g. name) if a valid token exists
+    hydrateProfile();
+  }, []);
+
   return (
     <>
+      <Toaster position="top-center" reverseOrder={false} />
       <CustomCursor />
       <Suspense fallback={<Loader />}>
         <Routes>
@@ -45,13 +56,14 @@ function App() {
             <Route path="/logout-success" element={<LogoutSuccess />} />
             <Route path="/simulator" element={<WhatIfSimulator />} />
             <Route path="/about" element={<About />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
 
             {/* Protected User Routes */}
             <Route element={<ProtectedRoute allowedRoles={['user', 'admin']} />}>
               <Route path="/dashboard" element={<UserDashboard />} />
               <Route path="/apply" element={<LoanApplicationForm />} />
               <Route path="/decision" element={<RiskResultCard />} />
-              
+
             </Route>
 
             {/* 404 Catch-all for UserLayout */}

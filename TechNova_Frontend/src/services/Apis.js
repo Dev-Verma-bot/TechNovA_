@@ -5,6 +5,8 @@ const BASE_URL =
 export const authEndpoints = {
   LOGIN_API: `${BASE_URL}/auth/login`,
   SIGNUP_API: `${BASE_URL}/auth/signup`,
+  SIGNUP_SEND_OTP_API: `${BASE_URL}/auth/signup/send-otp`,
+  FORGOT_PASSWORD_SEND_OTP_API: `${BASE_URL}/auth/forgot-password/send-otp`,
   RESET_PASSWORD_API: `${BASE_URL}/auth/reset-password`,
 };
 

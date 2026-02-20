@@ -195,11 +195,11 @@ const About = () => {
           </div>
 
           <div>
-            <h4 className="text-xs uppercase tracking-[0.2em] text-slate-500 font-extrabold mb-4">Legal & Compliance</h4>
+            <h4 className="text-xs uppercase tracking-[0.2em] text-slate-500 font-extrabold mb-4">Legal & Privacy</h4>
             <ul className="space-y-3 text-[15px] text-slate-700 font-medium">
               <li>GDPR Compliance</li>
               <li>Fair Credit Act</li>
-              <li>Privacy Policy</li>
+              <li><Link to="/privacy-policy" className="hover:text-slate-900 transition-colors">Privacy Policy</Link></li>
             </ul>
           </div>
 
