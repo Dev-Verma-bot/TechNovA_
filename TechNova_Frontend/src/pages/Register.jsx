@@ -113,7 +113,7 @@ const Register = () => {
                                 <Shield className="w-6 h-6 text-primary-600 fill-white z-10" />
                                 <div className="absolute inset-0 bg-primary-50 rounded-full scale-110 -z-0 group-hover:bg-primary-100 transition-colors"></div>
                             </div>
-                            <span className="text-[18px] font-extrabold tracking-tight">FairLoan AI</span>
+                            <span className="text-[18px] font-extrabold tracking-tight">CredNova</span>
                         </Link>
                         <h2 className="text-3xl font-[900] tracking-tight mb-2">Create an account</h2>
                         <p className="text-slate-500 font-medium text-[15px]">Start modernizing your credit decisions today.</p>
@@ -310,3 +310,4 @@ const Register = () => {
 };
 
 export default Register;
+

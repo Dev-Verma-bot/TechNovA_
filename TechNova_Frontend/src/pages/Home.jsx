@@ -2,8 +2,11 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { ShieldCheck, TrendingUp, Zap, ChevronRight, CheckCircle2, Building2, Shield, Leaf, Layout, ArrowRight, BarChart3, Activity, Info, Scale, Landmark } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useAppSelector } from '../hooks/useAppDispatch';
 
 const Home = () => {
+  const { isAuthenticated } = useAppSelector((state) => state.auth || {});
+
   const container = {
     hidden: { opacity: 0 },
     show: {
@@ -48,9 +51,11 @@ const Home = () => {
                 Apply for a Loan
                 <ArrowRight className="ml-2 w-5 h-5 transition-transform" />
               </Link>
-              <Link to="/simulator" className="inline-flex items-center justify-center px-8 py-[18px] text-[16px] font-[800] text-[#0f172a] bg-[#f8fafc] hover:bg-[#f1f5f9] border border-[#f1f5f9] rounded-[12px] transition-all w-full sm:w-auto">
-                Request a Demo
-              </Link>
+              {!isAuthenticated && (
+                <Link to="/login" className="inline-flex items-center justify-center px-8 py-[18px] text-[16px] font-[800] text-[#0f172a] bg-[#f8fafc] hover:bg-[#f1f5f9] border border-[#f1f5f9] rounded-[12px] transition-all w-full sm:w-auto">
+                  Request a Demo
+                </Link>
+              )}
             </motion.div>
           </motion.div>
 
@@ -301,17 +306,9 @@ const Home = () => {
             Ready to modernize your credit scoring?
           </h2>
           <div className="inline-flex items-center px-6 py-2.5 bg-white/20 rounded-full text-white text-[16px] font-[500] mb-12 backdrop-blur-sm">
-            Join 50+ financial institutions using FairLoan AI
+            Join 50+ financial institutions using CredNova
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-5 items-center">
-            <button className="px-8 py-4 bg-white text-[#1877F2] rounded-[12px] text-[16px] font-[800] shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:shadow-[0_20px_40px_rgb(0,0,0,0.16)] hover:bg-slate-50 transition-all w-full sm:w-auto">
-              Start Free Trial
-            </button>
-            <button className="px-8 py-4 border border-white/40 text-white rounded-[12px] text-[16px] font-[800] hover:bg-white/10 transition-all w-full sm:w-auto">
-              Talk to Sales
-            </button>
-          </div>
         </div>
       </section>
 
@@ -320,3 +317,4 @@ const Home = () => {
 };
 
 export default Home;
+

@@ -42,14 +42,6 @@ const About = () => {
           Bridging the gap between advanced neural networks and human-readable credit decisions. Our mission is to democratize lending through explainable AI.
         </p>
 
-        <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
-          <button className="w-full sm:w-auto px-8 py-4 rounded-xl bg-[#1a73e8] text-white font-bold shadow-[0_10px_24px_rgba(26,115,232,0.25)] hover:bg-[#1557b0] transition-colors">
-            Read Whitepaper
-          </button>
-          <button className="w-full sm:w-auto px-8 py-4 rounded-xl bg-[#e5e9ef] text-slate-800 font-semibold hover:bg-[#dbe1e9] transition-colors">
-            Our Ethics Framework
-          </button>
-        </div>
       </section>
 
       <section className="px-6 md:px-12 lg:px-20 py-16 bg-[#eef2f6] border-y border-slate-200/70">

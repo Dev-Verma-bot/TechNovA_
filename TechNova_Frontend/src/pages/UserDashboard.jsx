@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { FileText, Activity, ArrowRight, CheckCircle2, Clock, AlertCircle, PlayCircle } from 'lucide-react';
+import { FileText, ArrowRight, CheckCircle2, Clock, AlertCircle, PlayCircle } from 'lucide-react';
 import { getProfileService, getUserLoansService } from '../services/Operations';
 import { useAppDispatch, useAppSelector } from '../hooks/useAppDispatch';
 import {
@@ -248,7 +248,7 @@ const UserDashboard = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="grid grid-cols-1 md:grid-cols-2 gap-4"
+              className="grid grid-cols-1 gap-4"
             >
               <div className="bg-gradient-to-br from-indigo-500 to-indigo-700 rounded-[24px] p-8 text-white relative overflow-hidden group hover:shadow-lg transition-all cursor-pointer">
                 <div className="absolute -right-4 -top-4 w-32 h-32 bg-white/10 rounded-full blur-2xl group-hover:bg-white/20 transition-all"></div>
@@ -265,18 +265,6 @@ const UserDashboard = () => {
                 </Link>
               </div>
 
-              <div className="bg-white rounded-[24px] shadow-sm border border-slate-100 p-8 flex flex-col justify-between">
-                <div>
-                  <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center mb-6">
-                    <Activity className="w-5 h-5 text-slate-600" />
-                  </div>
-                  <h3 className="text-lg font-bold text-slate-900 mb-2">Transparency Report</h3>
-                  <p className="text-sm text-slate-500 font-medium mb-4">
-                    Download a full breakdown of why previous decisions were made using our XAI Engine.
-                  </p>
-                </div>
-                <button className="text-left text-sm font-bold text-primary-600 hover:text-primary-700">Request Report &rarr;</button>
-              </div>
             </motion.div>
           </div>
 
@@ -333,9 +321,6 @@ const UserDashboard = () => {
               <p className="text-sm font-medium text-slate-600 mb-6 leading-relaxed">
                 Signed in as {profile?.email || 'your account'}. Dashboard metrics now come from stored backend applications.
               </p>
-              <button className="px-5 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-700 hover:bg-slate-50 transition-colors shadow-sm w-full">
-                Read Guide
-              </button>
             </div>
           </motion.div>
         </div>

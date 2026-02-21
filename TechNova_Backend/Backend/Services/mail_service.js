@@ -69,7 +69,7 @@ exports.sendSuccessEmail = async (email, purpose = "signup") => {
   const text =
     purpose === "password-reset"
       ? "Your password has been reset successfully. If this was not you, contact support immediately."
-      : "Your account was created successfully. Welcome to FairLoan AI.";
+      : "Your account was created successfully. Welcome to CredNova.";
 
   await transporter.sendMail({
     from: MAIL_USER,
@@ -78,3 +78,4 @@ exports.sendSuccessEmail = async (email, purpose = "signup") => {
     text,
   });
 };
+

@@ -13,7 +13,7 @@ const Footer = () => {
                             <div className="absolute inset-0 bg-primary-500 rounded-full scale-110 -z-0 group-hover:bg-primary-600 transition-colors"></div>
                         </div>
                         <span className="text-[20px] font-extrabold tracking-tight text-white">
-                            FairLoan AI
+                            CredNova
                         </span>
                     </div>
                     <p className="text-sm text-slate-400 leading-relaxed mb-6 font-medium max-w-sm">
@@ -68,10 +68,11 @@ const Footer = () => {
             </div>
 
             <div className="max-w-[1400px] mx-auto px-6 lg:px-12 text-center text-[13px] font-[500] text-slate-500 mt-10">
-                © {new Date().getFullYear()} FairLoan AI Systems Inc. All rights reserved. Decisions are made using proprietary explainable neural networks.
+                © {new Date().getFullYear()} CredNova Systems Inc. All rights reserved. Decisions are made using proprietary explainable neural networks.
             </div>
         </footer>
     );
 };
 
 export default Footer;
+

@@ -44,7 +44,7 @@ const Navbar = () => {
                     <div className="absolute inset-0 bg-primary-50 rounded-full scale-110 -z-0 group-hover:bg-primary-100 transition-colors"></div>
                 </div>
                 <span className="text-[20px] font-extrabold tracking-tight text-[#111827]">
-                    FairLoan AI
+                    CredNova
                 </span>
             </Link>
 
@@ -114,3 +114,4 @@ const Navbar = () => {
 };
 
 export default Navbar;
+

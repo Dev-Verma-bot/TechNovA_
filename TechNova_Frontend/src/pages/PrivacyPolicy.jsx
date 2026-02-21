@@ -175,10 +175,10 @@ const PrivacyPolicy = () => {
                                 ))}
                             </div>
 
-                            <button className="w-full mt-6 rounded-xl bg-blue-600 hover:bg-blue-700 transition-colors text-white font-bold py-3 text-sm md:text-base inline-flex items-center justify-center gap-2">
+                            <a href="/CredNova_Privacy_Policy.pdf#toolbar=0" target="_blank" rel="noopener noreferrer" className="w-full mt-6 rounded-xl bg-blue-600 hover:bg-blue-700 transition-colors text-white font-bold py-3 text-sm md:text-base inline-flex items-center justify-center gap-2">
                                 <Download className="w-4 h-4" />
                                 Privacy Policy (PDF)
-                            </button>
+                            </a>
                             <p className="text-center mt-3 text-xs text-slate-500">
                                 Last updated: Oct 2023
                             </p>
@@ -189,9 +189,6 @@ const PrivacyPolicy = () => {
                             <p className="mt-3 text-blue-100 text-sm md:text-base leading-7">
                                 Contact our Data Protection Officer for any privacy or compliance concerns.
                             </p>
-                            <a href="#" className="inline-block mt-4 text-blue-400 hover:text-blue-300 font-semibold">
-                                Contact DPO
-                            </a>
                             <Headphones className="absolute right-4 bottom-3 w-16 h-16 text-blue-200/20" />
                         </div>
                     </aside>
@@ -203,3 +200,4 @@ const PrivacyPolicy = () => {
 };
 
 export default PrivacyPolicy;
+
