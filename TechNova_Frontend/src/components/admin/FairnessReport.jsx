@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Scale, CheckCircle2, ShieldAlert, AlertTriangle, ChevronRight, Activity } from 'lucide-react';
+import { Scale, CheckCircle2, ShieldAlert, AlertTriangle } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { getAdminFairnessMetricsService } from '../../services/Operations';
 
@@ -71,9 +71,7 @@ const FairnessDashboard = () => {
             </h1>
             <p className="text-slate-500 mt-2 font-medium">Real-time monitoring of AI decision parity and model fairness constraints.</p>
          </div>
-         <button className="px-4 py-2 bg-slate-900 text-white text-sm font-semibold rounded-lg hover:bg-slate-800 transition-colors shadow-sm focus:ring-2 focus:ring-offset-2 focus:ring-slate-900">
-            Export Audit Logs
-         </button>
+         <div />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -156,9 +154,6 @@ const FairnessDashboard = () => {
                      <p className="text-sm text-slate-600 font-medium leading-relaxed mb-4">
                         We detected a minor variance (-6% vs mean) in approval rates for Demographic D over the trailing 72 hours. The Adversarial Debiasing network automatically recalibrated weights for feature subset [Location_Zip] to compensate, ensuring continuous compliance.
                      </p>
-                     <button className="text-xs font-bold text-primary-600 uppercase tracking-widest flex items-center hover:text-primary-700 transition-colors">
-                        View Mitigation Log <ChevronRight className="w-4 h-4 ml-1" />
-                     </button>
                   </div>
                </div>
             </div>

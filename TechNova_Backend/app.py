@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 import pandas as pd
+import math
 from config import Config
 from model_utils import predictor
 from llm_utils import llm_analyzer
@@ -10,6 +11,17 @@ import json
 app = Flask(__name__)
 app.config.from_object(Config)
 CORS(app)  # Enable CORS for React frontend
+
+
+def sanitize_json(value):
+    """Convert NaN/Inf to JSON-safe values."""
+    if isinstance(value, dict):
+        return {k: sanitize_json(v) for k, v in value.items()}
+    if isinstance(value, list):
+        return [sanitize_json(v) for v in value]
+    if isinstance(value, float):
+        return value if math.isfinite(value) else 0.0
+    return value
 
 
 @app.route('/api/predict', methods=['POST'])
@@ -72,11 +84,11 @@ def predict_loan():
             analysis_response['database_id'] = db_id
         
         # Return response
-        return jsonify({
+        return jsonify(sanitize_json({
             'success': True,
             'prediction': prediction_results,
             'analysis': analysis_response
-        })
+        }))
         
     except Exception as e:
         return jsonify({

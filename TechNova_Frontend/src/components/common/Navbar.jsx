@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Shield, UserCircle2, LogOut, ChevronDown } from 'lucide-react';
+import { Shield, UserCircle2, LogOut, ChevronDown, LayoutDashboard } from 'lucide-react';
 import { useAppSelector } from '../../hooks/useAppDispatch';
 import { selectAuth } from '../../redux/slices/authSlice';
 import { useAuth } from '../../hooks/useAuth';
@@ -27,10 +27,18 @@ const Navbar = () => {
         navigate('/logout-success');
     };
 
+    const handleGoDashboard = () => {
+        setMenuOpen(false);
+        if (user?.role === 'admin') {
+            navigate('/admin');
+            return;
+        }
+        navigate('/dashboard');
+    };
+
     return (
         <header className="sticky top-0 z-50 bg-white border-b border-slate-100 lg:px-12 px-6 py-4 flex items-center justify-between">
             <Link to="/" className="flex items-center gap-2 group">
-                {/* Replicating the FairLoan AI shield logo from screenshot */}
                 <div className="relative flex items-center justify-center">
                     <Shield className="w-7 h-7 text-primary-600 fill-white z-10 transition-transform group-hover:scale-105" />
                     <div className="absolute inset-0 bg-primary-50 rounded-full scale-110 -z-0 group-hover:bg-primary-100 transition-colors"></div>
@@ -78,6 +86,13 @@ const Navbar = () => {
                                     </p>
                                     <p className="text-xs text-slate-500 truncate">{user?.email || ''}</p>
                                 </div>
+                                <button
+                                    onClick={handleGoDashboard}
+                                    className="w-full px-4 py-3 text-left text-sm font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                                >
+                                    <LayoutDashboard className="w-4 h-4" />
+                                    Dashboard
+                                </button>
                                 <button
                                     onClick={handleLogout}
                                     className="w-full px-4 py-3 text-left text-sm font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2"

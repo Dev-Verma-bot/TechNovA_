@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Users, FileText, CheckCircle2, TrendingUp, MoreVertical, Search, Clock, ShieldAlert } from 'lucide-react';
+import { Users, FileText, CheckCircle2, TrendingUp, Search, ShieldAlert } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
-import { getAllApplicationsService } from '../../services/Operations';
+import { getAllApplicationsService, approveRejectService } from '../../services/Operations';
 
 const data = [
   { name: 'Mon', apps: 400, approvals: 240 },
@@ -56,13 +56,40 @@ const AdminDashboard = () => {
   const totalApplications = applications.length;
   const approvedCount = applications.filter((app) => app.status === "approved").length;
   const pendingCount = applications.filter((app) => app.status === "pending").length;
+  const rejectedCount = applications.filter((app) => app.status === "rejected").length;
+
+  const handleStatusUpdate = async (applicationId, status) => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    try {
+      const response = await approveRejectService(
+        applicationId,
+        { status },
+        token
+      );
+
+      const updated = response?.data;
+      if (!updated?._id) return;
+
+      setApplications((prev) =>
+        prev.map((item) =>
+          item._id === updated._id
+            ? { ...item, status: updated.status, predictedScore: updated.predictedScore ?? item.predictedScore }
+            : item
+        )
+      );
+    } catch (error) {
+      // no-op for now
+    }
+  };
 
   const tableRows = useMemo(() => {
     return applications.slice(0, 10).map((app) => ({
       id: app._id,
-      name: app.userId?.name || "Unknown User",
-      amount: `$${Number(app.amount || 0).toLocaleString()}`,
-      score: "--",
+      name: app.name || app.userId?.name || "Applicant",
+      amount: `INR ${Number(app.amount || 0).toLocaleString("en-IN")}`,
+      score: Number.isFinite(Number(app.predictedScore)) ? Number(app.predictedScore) : "--",
       status: app.status || "pending",
       time: app.createdAt ? new Date(app.createdAt).toLocaleString() : "-",
     }));
@@ -73,14 +100,7 @@ const AdminDashboard = () => {
       {/* Header */}
       <div className="flex justify-between items-center mb-8">
          <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">Overview</h1>
-         <div className="flex items-center gap-4">
-            <span className="text-sm font-medium text-slate-500 flex items-center gap-2">
-               <Clock className="w-4 h-4" /> Last updated: 2 mins ago
-            </span>
-            <button className="px-4 py-2 bg-slate-900 text-white text-sm font-semibold rounded-lg hover:bg-slate-800 transition-colors shadow-sm focus:ring-2 focus:ring-offset-2 focus:ring-slate-900">
-               Generate Global Report
-            </button>
-         </div>
+         <div />
       </div>
 
       {/* Stats Row */}
@@ -107,11 +127,11 @@ const AdminDashboard = () => {
             colorClass={{ bg: 'bg-warning/10', text: 'text-warning' }} 
          />
          <StatCard 
-            title="Avg Decision Time" 
-            value="1.2s" 
+            title="Rejected" 
+            value={rejectedCount} 
             change={0} 
-            icon={Clock} 
-            colorClass={{ bg: 'bg-slate-100', text: 'text-slate-600' }} 
+            icon={ShieldAlert} 
+            colorClass={{ bg: 'bg-danger/10', text: 'text-danger' }} 
          />
       </div>
 
@@ -173,9 +193,6 @@ const AdminDashboard = () => {
                   </div>
                ))}
             </div>
-            <button className="w-full mt-4 py-2 text-sm font-semibold text-primary-600 bg-primary-50 rounded-lg hover:bg-primary-100 transition-colors">
-               View All Alerts
-            </button>
          </div>
       </div>
 
@@ -198,7 +215,7 @@ const AdminDashboard = () => {
                      <th className="p-4 font-medium">Risk Score</th>
                      <th className="p-4 font-medium">Status</th>
                      <th className="p-4 font-medium">Time</th>
-                     <th className="p-4 pr-6"></th>
+                     <th className="p-4 pr-6">Action</th>
                   </tr>
                </thead>
                <tbody className="text-sm font-medium text-slate-900">
@@ -224,9 +241,20 @@ const AdminDashboard = () => {
                         </td>
                         <td className="p-4 text-slate-400 text-xs whitespace-nowrap">{app.time}</td>
                         <td className="p-4 pr-6 text-right">
-                           <button className="text-slate-400 hover:text-slate-900 p-1 rounded transition-colors opacity-0 group-hover:opacity-100">
-                              <MoreVertical className="w-5 h-5" />
-                           </button>
+                           <div className="flex items-center justify-end gap-2">
+                              <button
+                                 onClick={() => handleStatusUpdate(app.id, "approved")}
+                                 className="px-3 py-1.5 rounded-md text-xs font-bold bg-success/10 text-success border border-success/20 hover:bg-success/20"
+                              >
+                                 Accept
+                              </button>
+                              <button
+                                 onClick={() => handleStatusUpdate(app.id, "rejected")}
+                                 className="px-3 py-1.5 rounded-md text-xs font-bold bg-danger/10 text-danger border border-danger/20 hover:bg-danger/20"
+                              >
+                                 Decline
+                              </button>
+                           </div>
                         </td>
                      </tr>
                   ))}

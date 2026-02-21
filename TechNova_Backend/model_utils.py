@@ -68,8 +68,10 @@ class LoanModelPredictor:
         # Preprocess
         X_processed = self.preprocessor.transform(df)
         
-        # Predict probability
+        # Predict probability and sanitize invalid numeric outputs
         prob = float(self.model.predict(X_processed)[0][0])
+        if not np.isfinite(prob):
+            prob = 0.5
         
         # Determine class
         predicted_class = 0 if prob > 0.5 else 1  # 0 = reject, 1 = accept
@@ -86,8 +88,8 @@ class LoanModelPredictor:
         feature_importance = self._calculate_feature_importance(X_processed[0])
         
         return {
-            'probability_default': prob,
-            'probability_approval': 1 - prob,
+            'probability_default': float(prob),
+            'probability_approval': float(1 - prob),
             'predicted_class': predicted_class,
             'risk_category': risk_category,
             'feature_importance': feature_importance,
@@ -113,11 +115,25 @@ class LoanModelPredictor:
         
         # Normalize to percentages
         abs_gradients = np.abs(gradients)
-        importance_percentages = (abs_gradients / abs_gradients.sum()) * 100
+        total = abs_gradients.sum()
+        if not np.isfinite(total) or total <= 0:
+            importance_percentages = np.zeros_like(abs_gradients, dtype=np.float32)
+        else:
+            importance_percentages = (abs_gradients / total) * 100
+
+        # Ensure finite JSON-safe numbers only
+        importance_percentages = np.nan_to_num(
+            importance_percentages,
+            nan=0.0,
+            posinf=0.0,
+            neginf=0.0,
+        )
         
         # Map to feature names if available
         if self.feature_names and len(self.feature_names) == len(importance_percentages):
-            feature_importance = dict(zip(self.feature_names, importance_percentages))
+            feature_importance = {
+                name: float(val) for name, val in zip(self.feature_names, importance_percentages)
+            }
         else:
             feature_importance = {f"feature_{i}": float(val) 
                                 for i, val in enumerate(importance_percentages)}

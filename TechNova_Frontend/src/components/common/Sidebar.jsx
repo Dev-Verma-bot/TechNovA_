@@ -1,16 +1,17 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Scale, Users, Activity, Settings, Shield } from 'lucide-react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { LayoutDashboard, Scale, LogOut, Shield } from 'lucide-react';
+import { useAuth } from '../../hooks/useAuth';
 
 const Sidebar = () => {
     const location = useLocation();
+    const { logout } = useAuth();
+    const navigate = useNavigate();
 
     const navigation = [
         { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
         { name: 'Bias & Fairness', href: '/admin/fairness', icon: Scale },
-        { name: 'Applications', href: '#', icon: Users },
-        { name: 'Audit Log', href: '#', icon: Activity },
-        { name: 'Settings', href: '#', icon: Settings }
+        { name: 'Logout', href: '#logout', icon: LogOut, action: 'logout' },
     ];
 
     return (
@@ -29,15 +30,23 @@ const Sidebar = () => {
                 {navigation.map((item) => {
                     const isActive = location.pathname === item.href;
                     return (
-                        <Link
+                        <button
                             key={item.name}
-                            to={item.href}
+                            type="button"
+                            onClick={() => {
+                                if (item.action === 'logout') {
+                                    logout();
+                                    navigate('/logout-success');
+                                    return;
+                                }
+                                navigate(item.href);
+                            }}
                             className={`group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors ${isActive ? 'bg-slate-800 text-white shadow-sm' : 'hover:bg-slate-800/50 hover:text-white'
                                 }`}
                         >
                             <item.icon className={`flex-shrink-0 mr-3 h-5 w-5 ${isActive ? 'text-primary-400' : 'text-slate-500 group-hover:text-slate-300'}`} />
                             {item.name}
-                        </Link>
+                        </button>
                     )
                 })}
             </nav>

@@ -18,7 +18,7 @@ const OTP_TTL_MS = 10 * 60 * 1000;
 const otpStore = new Map();
 
 const buildOtpKey = (email, purpose) =>
-  `${purpose}:${String(email || "").toLowerCase()}`;
+  `${purpose}:${String(email || "").toLowerCase().trim()}`;
 
 const generateOtp = () =>
   String(Math.floor(100000 + Math.random() * 900000));
@@ -55,6 +55,18 @@ const verifyOtp = (email, purpose, otp) => {
   return { ok: true };
 };
 
+const isProd = String(process.env.NODE_ENV || "").toLowerCase() === "production";
+
+const getErrorMessage = (error, fallback) => {
+  if (!error) return fallback;
+  const responseText = String(error.response || "").toLowerCase();
+  const messageText = String(error.message || "").toLowerCase();
+  if (responseText.includes("invalid login") || messageText.includes("invalid login")) {
+    return "Mail authentication failed. Check MAIL_USER / MAIL_PASS app password.";
+  }
+  return error.message || fallback;
+};
+
 /* =====================================================
    SEND SIGNUP OTP
 ===================================================== */
@@ -62,29 +74,45 @@ const verifyOtp = (email, purpose, otp) => {
 exports.sendSignupOtp = async (req, res) => {
   try {
     const { email } = req.body;
+    const normalizedEmail = String(email || "").trim().toLowerCase();
 
-    if (!email)
+    if (!normalizedEmail)
       return res.status(400).json({
         message: "Email is required",
       });
 
-    const existingUser = await User.findOne({ email });
+    const existingUser = await User.findOne({ email: normalizedEmail });
 
     if (existingUser)
       return res.status(400).json({
         message: "User already exists",
       });
 
-    const otp = setOtp(email, "signup");
+    const otp = setOtp(normalizedEmail, "signup");
 
-    await sendOtpEmail(email, otp, "signup");
+    try {
+      await sendOtpEmail(normalizedEmail, otp, "signup");
+      return res.status(200).json({
+        message: "Signup OTP sent",
+      });
+    } catch (mailError) {
+      console.error("sendSignupOtp mail error:", mailError);
 
-    res.status(200).json({
-      message: "Signup OTP sent",
-    });
-  } catch {
+      if (isProd) {
+        return res.status(500).json({
+          message: getErrorMessage(mailError, "Failed to send OTP"),
+        });
+      }
+
+      return res.status(200).json({
+        message: "OTP generated. Mail delivery failed in local mode.",
+        devOtp: otp,
+      });
+    }
+  } catch (error) {
+    console.error("sendSignupOtp error:", error);
     res.status(500).json({
-      message: "Failed to send OTP",
+      message: getErrorMessage(error, "Failed to send OTP"),
     });
   }
 };
@@ -96,20 +124,21 @@ exports.sendSignupOtp = async (req, res) => {
 exports.register = async (req, res) => {
   try {
     const { name, email, password, otp } = req.body;
+    const normalizedEmail = String(email || "").trim().toLowerCase();
 
-    if (!name || !email || !password || !otp)
+    if (!name || !normalizedEmail || !password || !otp)
       return res.status(400).json({
         message: "All fields required",
       });
 
-    const existingUser = await User.findOne({ email });
+    const existingUser = await User.findOne({ email: normalizedEmail });
 
     if (existingUser)
       return res.status(400).json({
         message: "User already exists",
       });
 
-    const otpResult = verifyOtp(email, "signup", otp);
+    const otpResult = verifyOtp(normalizedEmail, "signup", otp);
 
     if (!otpResult.ok)
       return res.status(400).json({
@@ -120,14 +149,14 @@ exports.register = async (req, res) => {
 
     const user = await User.create({
       name,
-      email,
+      email: normalizedEmail,
       password: hashedPassword,
     });
 
     try {
-      await sendSuccessEmail(email, "signup");
+      await sendSuccessEmail(normalizedEmail, "signup");
     } catch (err) {
-      console.log("Success mail failed");
+      console.error("Signup success mail failed:", err.message || err);
     }
 
     res.status(201).json({
@@ -137,6 +166,7 @@ exports.register = async (req, res) => {
       email: user.email,
     });
   } catch (error) {
+    console.error("register error:", error);
     res.status(500).json({
       message: "Registration failed",
     });
@@ -150,8 +180,9 @@ exports.register = async (req, res) => {
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
+    const normalizedEmail = String(email || "").trim().toLowerCase();
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email: normalizedEmail });
 
     if (!user)
       return res.status(404).json({
@@ -174,10 +205,9 @@ exports.login = async (req, res) => {
       { expiresIn: JWT_EXPIRES_IN }
     );
 
-    /* COOKIE AUTH */
     res.cookie("token", token, {
       httpOnly: true,
-      secure: false, // true in production
+      secure: false,
       sameSite: "Lax",
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
@@ -190,7 +220,8 @@ exports.login = async (req, res) => {
       email: user.email,
       role: user.role,
     });
-  } catch {
+  } catch (error) {
+    console.error("login error:", error);
     res.status(500).json({
       message: "Login failed",
     });
@@ -204,24 +235,40 @@ exports.login = async (req, res) => {
 exports.sendForgotPasswordOtp = async (req, res) => {
   try {
     const { email } = req.body;
+    const normalizedEmail = String(email || "").trim().toLowerCase();
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email: normalizedEmail });
 
     if (!user)
       return res.status(404).json({
         message: "User not found",
       });
 
-    const otp = setOtp(email, "reset-password");
+    const otp = setOtp(normalizedEmail, "reset-password");
 
-    await sendOtpEmail(email, otp, "password-reset");
+    try {
+      await sendOtpEmail(normalizedEmail, otp, "password-reset");
+      return res.status(200).json({
+        message: "Password reset OTP sent",
+      });
+    } catch (mailError) {
+      console.error("sendForgotPasswordOtp mail error:", mailError);
 
-    res.status(200).json({
-      message: "Password reset OTP sent",
-    });
-  } catch {
+      if (isProd) {
+        return res.status(500).json({
+          message: getErrorMessage(mailError, "Failed to send reset OTP"),
+        });
+      }
+
+      return res.status(200).json({
+        message: "Reset OTP generated. Mail delivery failed in local mode.",
+        devOtp: otp,
+      });
+    }
+  } catch (error) {
+    console.error("sendForgotPasswordOtp error:", error);
     res.status(500).json({
-      message: "Failed to send reset OTP",
+      message: getErrorMessage(error, "Failed to send reset OTP"),
     });
   }
 };
@@ -233,8 +280,9 @@ exports.sendForgotPasswordOtp = async (req, res) => {
 exports.resetPassword = async (req, res) => {
   try {
     const { email, otp, password } = req.body;
+    const normalizedEmail = String(email || "").trim().toLowerCase();
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email: normalizedEmail });
 
     if (!user)
       return res.status(404).json({
@@ -242,7 +290,7 @@ exports.resetPassword = async (req, res) => {
       });
 
     const otpResult = verifyOtp(
-      email,
+      normalizedEmail,
       "reset-password",
       otp
     );
@@ -256,13 +304,16 @@ exports.resetPassword = async (req, res) => {
     await user.save();
 
     try {
-      await sendSuccessEmail(email, "password-reset");
-    } catch { }
+      await sendSuccessEmail(normalizedEmail, "password-reset");
+    } catch (error) {
+      console.error("Reset success mail failed:", error.message || error);
+    }
 
     res.status(200).json({
       message: "Password reset successful",
     });
-  } catch {
+  } catch (error) {
+    console.error("resetPassword error:", error);
     res.status(500).json({
       message: "Password reset failed",
     });

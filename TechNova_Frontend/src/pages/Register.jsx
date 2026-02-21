@@ -12,13 +12,14 @@ const Register = () => {
         email: '',
         password: '',
         confirmPassword: '',
+        otp: '',
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [submitError, setSubmitError] = useState('');
     const [isSendingOtp, setIsSendingOtp] = useState(false);
-    const [otpMessage, setOtpMessage] = useState('');   
+    const [otpMessage, setOtpMessage] = useState('');
     const navigate = useNavigate();
     const { register } = useAuth();
 
@@ -37,8 +38,16 @@ const Register = () => {
 
         try {
             setIsSendingOtp(true);
-            await sendSignupOtpService({ email: formData.email });
-            setOtpMessage('OTP sent to your email.');
+            const response = await sendSignupOtpService({ email: formData.email });
+            const message = response?.data?.message || 'OTP sent to your email.';
+            const devOtp = response?.data?.devOtp;
+
+            if (devOtp) {
+                setFormData((prev) => ({ ...prev, otp: String(devOtp) }));
+                setOtpMessage(`${message} (Local OTP auto-filled)`);
+            } else {
+                setOtpMessage(message);
+            }
         } catch (err) {
             setSubmitError(err?.response?.data?.message || 'Failed to send OTP.');
         } finally {
@@ -58,8 +67,6 @@ const Register = () => {
             password: formData.password,
             otp: formData.otp,
         };
-
-
 
         if (!payload.name) {
             setIsSubmitting(false);
@@ -90,7 +97,6 @@ const Register = () => {
 
     return (
         <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6 relative overflow-hidden">
-            {/* Background Decor */}
             <div className="absolute top-0 left-0 w-[800px] h-[800px] bg-primary-50 rounded-full blur-3xl opacity-50 -translate-y-1/2 -translate-x-1/2 pointer-events-none"></div>
             <div className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-blue-50/50 rounded-full blur-3xl opacity-60 translate-y-1/2 translate-x-1/4 pointer-events-none"></div>
 
@@ -100,7 +106,6 @@ const Register = () => {
                 transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
                 className="w-full max-w-5xl bg-white rounded-[24px] shadow-card border border-slate-100 flex flex-col md:flex-row-reverse overflow-hidden relative z-10"
             >
-                {/* Right Side: Registration Form */}
                 <div className="w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-center">
                     <div className="mb-8 text-center md:text-left text-slate-900">
                         <Link to="/" className="inline-flex items-center gap-2 mb-8 cursor-pointer group">
@@ -185,8 +190,6 @@ const Register = () => {
                                 required
                                 className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-[12px] text-[15px] font-medium text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all placeholder:text-slate-400"
                             />
-
-
                         </div>
 
                         <div>
@@ -194,7 +197,7 @@ const Register = () => {
                             <div className="relative">
                                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                                 <input
-                                    type={showPassword ? "text" : "password"}
+                                    type={showPassword ? 'text' : 'password'}
                                     name="password"
                                     value={formData.password}
                                     onChange={handleChange}
@@ -217,7 +220,7 @@ const Register = () => {
                             <div className="relative">
                                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                                 <input
-                                    type={showConfirmPassword ? "text" : "password"}
+                                    type={showConfirmPassword ? 'text' : 'password'}
                                     name="confirmPassword"
                                     value={formData.confirmPassword}
                                     onChange={handleChange}
@@ -263,9 +266,7 @@ const Register = () => {
                     </p>
                 </div>
 
-                {/* Left Side: Visual Context */}
                 <div className="hidden md:flex w-1/2 bg-slate-900 p-12 relative flex-col justify-between overflow-hidden">
-                    {/* Decorative elements */}
                     <div className="absolute inset-0 bg-gradient-to-br from-primary-900/50 to-slate-900 z-0"></div>
                     <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-primary-600 rounded-full blur-[100px] opacity-20 -translate-y-1/2 translate-x-1/4 pointer-events-none z-0"></div>
 
