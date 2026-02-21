@@ -54,7 +54,7 @@ const WhatIfSimulator = () => {
                <div>
                   <div className="flex justify-between mb-2">
                      <label className="text-sm font-bold text-slate-700">Annual Income</label>
-                     <span className="text-sm font-semibold text-primary-700 bg-primary-50 px-3 py-1 rounded-full">${income.toLocaleString()}</span>
+                     <span className="text-sm font-semibold text-primary-700 bg-primary-50 px-3 py-1 rounded-full">INR {income.toLocaleString('en-IN')}</span>
                   </div>
                   <input 
                      type="range" 
@@ -66,15 +66,15 @@ const WhatIfSimulator = () => {
                      className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-primary-600"
                   />
                   <div className="flex justify-between text-xs text-slate-400 font-medium mt-2">
-                     <span>$20k</span>
-                     <span>$200k+</span>
+                     <span>INR 20k</span>
+                     <span>INR 200k+</span>
                   </div>
                </div>
 
                <div>
                   <div className="flex justify-between mb-2">
                      <label className="text-sm font-bold text-slate-700">Total Existing Debt</label>
-                     <span className="text-sm font-semibold text-slate-700 bg-slate-100 px-3 py-1 rounded-full">${debt.toLocaleString()}</span>
+                     <span className="text-sm font-semibold text-slate-700 bg-slate-100 px-3 py-1 rounded-full">INR {debt.toLocaleString('en-IN')}</span>
                   </div>
                   <input 
                      type="range" 
@@ -86,8 +86,8 @@ const WhatIfSimulator = () => {
                      className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-slate-600"
                   />
                   <div className="flex justify-between text-xs text-slate-400 font-medium mt-2">
-                     <span>$0</span>
-                     <span>$100k+</span>
+                     <span>INR 0</span>
+                     <span>INR 100k+</span>
                   </div>
                </div>
 
