@@ -49,6 +49,7 @@ env/
 venv/
 .venv/
 ENV/
+TechNova_Backend/ENV
 
 #################################################
 # -------- MACHINE LEARNING FILES ----------

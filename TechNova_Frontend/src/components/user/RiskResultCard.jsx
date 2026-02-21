@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { CheckCircle2, ShieldAlert, Info, TrendingUp, ArrowRight, LoaderCircle } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
 // Redux
 import { useAppSelector } from '../../hooks/useAppDispatch';
@@ -69,15 +69,20 @@ const CircularProgress = ({ value, color, delay = 0 }) => {
 };
 
 const DecisionResult = () => {
-    const { status, score, category, features, suggestions, applicationId, isLoading } = useAppSelector(selectDecision);
-    const navigate = useNavigate();
-
-    // Redirect to apply if user somehow hits this page manually without score
-    useEffect(() => {
-      if (!isLoading && score === null) {
-          navigate('/apply');
-      }
-    }, [isLoading, score, navigate]);
+    const {
+      status,
+      score,
+      category,
+      features,
+      suggestions,
+      applicationId,
+      isLoading,
+      message,
+      riskCategory,
+      probabilityApproval,
+      probabilityDefault,
+      rejectionReasons,
+    } = useAppSelector(selectDecision);
 
    
    if (isLoading) {
@@ -90,7 +95,19 @@ const DecisionResult = () => {
      );
    }
 
-   if (score === null) return null; // Avoid render errors immediately before route redirect
+   if (score === null) {
+     return (
+       <div className="max-w-4xl mx-auto w-full px-4 py-20">
+         <div className="bg-white rounded-2xl border border-slate-200 p-10 text-center shadow-sm">
+           <h2 className="text-2xl font-bold text-slate-900 mb-3">No decision data found</h2>
+           <p className="text-slate-600 mb-6">Please submit an application to generate a prediction.</p>
+           <Link to="/apply" className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-primary-600 text-white font-semibold">
+             Go to Application <ArrowRight className="w-4 h-4" />
+           </Link>
+         </div>
+       </div>
+     );
+   }
    
    const scoreColor = category === 'green' ? 'text-success' : category === 'yellow' ? 'text-warning' : 'text-danger';
    const scoreBg = category === 'green' ? 'bg-success/10' : category === 'yellow' ? 'bg-warning/10' : 'bg-danger/10';
@@ -126,11 +143,11 @@ const DecisionResult = () => {
                      <div className="inline-flex items-center justify-center p-2 bg-success/10 text-success rounded-full mb-4">
                         <CheckCircle2 className="w-8 h-8" />
                      </div>
-                     <h2 className="text-2xl font-bold text-slate-900 mb-2">Congratulations!</h2>
-                     <p className="text-slate-600 mb-6 font-medium">You are eligible to repay this loan.</p>
+                  <h2 className="text-2xl font-bold text-slate-900 mb-2">Congratulations!</h2>
+                     <p className="text-slate-600 mb-6 font-medium">Your application has been forwarded to the admin for final review.</p>
                   </>
                )}
-               {status === 'manual' && (
+                {status === 'manual' && (
                   <>
                      <div className="inline-flex items-center justify-center p-2 bg-warning/10 text-warning rounded-full mb-4">
                         <Info className="w-8 h-8" />
@@ -139,7 +156,7 @@ const DecisionResult = () => {
                      <p className="text-slate-600 mb-6 font-medium">Your profile requires manual verification.</p>
                   </>
                )}
-               {status === 'declined' && (
+                {status === 'declined' && (
                   <>
                      <div className="inline-flex items-center justify-center p-2 bg-danger/10 text-danger rounded-full mb-4">
                         <ShieldAlert className="w-8 h-8" />
@@ -147,6 +164,9 @@ const DecisionResult = () => {
                      <h2 className="text-2xl font-bold text-slate-900 mb-2">Application Declined</h2>
                      <p className="text-slate-600 mb-6 font-medium">Unfortunately, we cannot approve this right now.</p>
                   </>
+                )}
+               {message && (
+                  <p className="text-sm text-slate-500 mt-2">{message}</p>
                )}
             </motion.div>
 
@@ -162,7 +182,7 @@ const DecisionResult = () => {
                   <h3 className="text-lg font-bold text-slate-900">AI Advisory</h3>
                </div>
                <div className="space-y-4">
-                  {suggestions.map((sug, idx) => (
+                  {(Array.isArray(suggestions) ? suggestions : []).map((sug, idx) => (
                      <div key={idx} className="flex gap-4 items-start p-4 rounded-xl bg-slate-50 border border-slate-100">
                         <div className="w-8 h-8 shrink-0 rounded-full bg-primary-100 flex items-center justify-center text-primary-600 font-bold text-sm">
                            {idx + 1}
@@ -173,6 +193,9 @@ const DecisionResult = () => {
                         </div>
                      </div>
                   ))}
+                  {!Array.isArray(suggestions) || suggestions.length === 0 ? (
+                     <p className="text-sm text-slate-500">No additional suggestions were returned.</p>
+                  ) : null}
                </div>
             </motion.div>
          </div>
@@ -193,16 +216,20 @@ const DecisionResult = () => {
                      <p className="text-slate-500 mt-2 font-medium flex items-center gap-2">
                         <Info className="w-4 h-4" /> Understanding exactly how your score was calculated.
                      </p>
+                     {(riskCategory || probabilityApproval !== null || probabilityDefault !== null) && (
+                       <p className="text-xs text-slate-500 mt-2">
+                         {riskCategory ? `Risk: ${riskCategory}. ` : ""}
+                         {probabilityApproval !== null ? `Approval: ${(Number(probabilityApproval) * 100).toFixed(2)}%. ` : ""}
+                         {probabilityDefault !== null ? `Default: ${(Number(probabilityDefault) * 100).toFixed(2)}%.` : ""}
+                       </p>
+                     )}
                   </div>
-                  <Link to="/report" className="hidden sm:inline-flex items-center px-4 py-2 text-sm font-semibold text-primary-700 bg-primary-50 hover:bg-primary-100 rounded-lg transition-colors border border-primary-100">
-                     View Full Report <ArrowRight className="ml-2 w-4 h-4" />
-                  </Link>
-               </div>
+                </div>
 
                <div className="space-y-8">
                   <h3 className="text-lg font-bold text-slate-900 border-b border-slate-100 pb-4">Feature Importance Influence</h3>
                   <div className="space-y-6">
-                     {features.map((feature, idx) => (
+                     {(Array.isArray(features) ? features : []).map((feature, idx) => (
                         <div key={idx} className="group">
                            <div className="flex justify-between items-center mb-2">
                               <span className="text-sm font-semibold text-slate-900 flex items-center gap-2">
@@ -224,13 +251,17 @@ const DecisionResult = () => {
                            </p>
                         </div>
                      ))}
+                     {!Array.isArray(features) || features.length === 0 ? (
+                       <p className="text-sm text-slate-500">No feature-importance details were returned.</p>
+                     ) : null}
                   </div>
                </div>
-               <div className="mt-8 pt-6 border-t border-slate-100 sm:hidden">
-                  <Link to="/report" className="inline-flex items-center justify-center w-full px-4 py-3 text-sm font-semibold text-primary-700 bg-primary-50 hover:bg-primary-100 rounded-xl transition-colors">
-                     View Full Report
-                  </Link>
-               </div>
+               {rejectionReasons ? (
+                 <div className="mt-8 p-4 rounded-xl bg-slate-50 border border-slate-100">
+                   <h4 className="text-sm font-bold text-slate-900 mb-2">Rejection Reasons</h4>
+                   <p className="text-sm text-slate-600 whitespace-pre-wrap">{rejectionReasons}</p>
+                 </div>
+               ) : null}
             </div>
          </motion.div>
       </div>

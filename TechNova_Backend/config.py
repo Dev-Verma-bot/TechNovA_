@@ -20,3 +20,4 @@ class Config:
     # Flask configuration
     SECRET_KEY = os.getenv('SECRET_KEY', 'your-secret-key-here')
     DEBUG = True
+    PORT = int(os.getenv('FLASK_PORT', 8000))

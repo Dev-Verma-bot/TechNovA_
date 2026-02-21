@@ -1,4 +1,10 @@
-require("dotenv").config();
+const path = require("path");
+const dotenv = require("dotenv");
+
+// Prefer the outer project .env: TechNova_Backend/.env
+dotenv.config({ path: path.resolve(__dirname, "../../.env") });
+// Fallback to Backend/.env if outer file is missing
+dotenv.config();
 
 module.exports = {
   PORT: process.env.PORT || 5000,

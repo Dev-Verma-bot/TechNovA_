@@ -1,5 +1,7 @@
 const BASE_URL =
   import.meta.env.VITE_APP_BASE_URL || "http://localhost:5000/api/v1";
+const PREDICT_BASE_URL =
+  import.meta.env.VITE_PREDICT_BASE_URL || "http://localhost:8000";
 
 /* ---------------- AUTH ---------------- */
 export const authEndpoints = {
@@ -38,4 +40,9 @@ export const adminEndpoints = {
 /* ---------------- FAIRNESS ---------------- */
 export const fairnessEndpoints = {
   FAIRNESS_STATS: `${BASE_URL}/fairness/report`,
+};
+
+/* ---------------- ML PREDICT ---------------- */
+export const predictEndpoints = {
+  PREDICT_API: `${PREDICT_BASE_URL}/api/predict`,
 };

@@ -2,7 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronRight, ChevronLeft, CheckCircle, Shield } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useLoan } from '../../hooks/useLoan';
+import { predictLoanService } from '../../services/Operations';
 
 // Redux
 import { useAppDispatch, useAppSelector } from '../../hooks/useAppDispatch';
@@ -23,7 +23,15 @@ const steps = [
   { id: 'loan', title: 'Loan Details' },
 ];
 
-const Input = ({ label, type = 'text', placeholder, value, onChange, error }) => (
+const Input = ({
+  label,
+  type = 'text',
+  placeholder,
+  value,
+  onChange,
+  error,
+  readOnly = false,
+}) => (
   <div className="mb-6">
     <label className="block text-[13px] font-[800] text-slate-700 mb-2 uppercase tracking-wide">{label}</label>
     <div className="relative">
@@ -33,9 +41,29 @@ const Input = ({ label, type = 'text', placeholder, value, onChange, error }) =>
         placeholder={placeholder}
         value={value || ''}
         onChange={onChange}
+        readOnly={readOnly}
+        required={!readOnly}
       />
       {error && <p className="mt-2 text-[13px] font-[600] text-red-500">{error}</p>}
     </div>
+  </div>
+);
+
+const SelectField = ({ label, value, onChange, options }) => (
+  <div className="mb-6">
+    <label className="block text-[13px] font-[800] text-slate-700 mb-2 uppercase tracking-wide">{label}</label>
+    <select
+      className="w-full px-5 py-4 rounded-[12px] border border-[#e2e8f0] focus:border-primary-500 outline-none bg-[#f8fafc] focus:bg-white text-[#0f172a] font-[500] text-[15px] transition-all"
+      value={value}
+      onChange={onChange}
+      required
+    >
+      {options.map((option) => (
+        <option key={option.value} value={option.value}>
+          {option.label}
+        </option>
+      ))}
+    </select>
   </div>
 );
 
@@ -48,10 +76,9 @@ const LoanApplicationForm = () => {
 
   // 2. Get Application State
   const applicationState = useAppSelector(selectApplication);
-  const { submitLoan } = useLoan();
 
   // Destructure with defaults to ensure we don't crash if loanSlice is resetting
-  const { formData = {}, currentStep = 0, submissionState = 'idle' } = applicationState || {};
+  const { formData = {}, currentStep = 0, submissionState = 'idle', error } = applicationState || {};
 
   const delta = currentStep > 0 ? 1 : -1;
 
@@ -65,42 +92,154 @@ const LoanApplicationForm = () => {
     } else {
       dispatch(submitApplicationStart());
       dispatch(setDecisionLoading(true));
-      const monthlyIncome = Math.round((Number(formData.income) || 0) / 12);
-      const payload = {
-        amount: Number(formData.loanAmount) || 0,
-        purpose: formData.purpose || "General purpose",
-        tenureMonths: 12,
-        monthlyIncome,
+      const rawPayload = {
+        Age: Number(formData.Age),
+        Income: Number(formData.Income),
+        LoanAmount: Number(formData.LoanAmount),
+        CreditScore: Number(formData.CreditScore),
+        MonthsEmployed: Number(formData.MonthsEmployed),
+        NumCreditLines: Number(formData.NumCreditLines),
+        InterestRate: Number(formData.InterestRate),
+        LoanTerm: Number(formData.LoanTerm),
+        DTIRatio: Number(formData.DTIRatio),
+        Education: formData.Education,
+        EmploymentType: formData.EmploymentType,
+        MaritalStatus: formData.MaritalStatus,
+        HasMortgage: formData.HasMortgage,
+        HasDependents: formData.HasDependents,
+        LoanPurpose: formData.LoanPurpose,
+        HasCoSigner: formData.HasCoSigner,
       };
 
-      const result = await submitLoan(payload);
-      if (!result.ok) {
-        dispatch(submitApplicationFailure("Loan submission failed"));
+      const predictFieldOrder = [
+        "Age",
+        "Income",
+        "LoanAmount",
+        "CreditScore",
+        "MonthsEmployed",
+        "NumCreditLines",
+        "InterestRate",
+        "LoanTerm",
+        "DTIRatio",
+        "Education",
+        "EmploymentType",
+        "MaritalStatus",
+        "HasMortgage",
+        "HasDependents",
+        "LoanPurpose",
+        "HasCoSigner",
+      ];
+
+      const payload = predictFieldOrder.reduce((acc, key) => {
+        acc[key] = rawPayload[key];
+        return acc;
+      }, {});
+
+      const featureNameMap = {
+        Age: "Age",
+        Income: "Income",
+        LoanAmount: "Loan Amount",
+        CreditScore: "Credit Score",
+        MonthsEmployed: "Months Employed",
+        NumCreditLines: "Number of Credit Lines",
+        InterestRate: "Interest Rate",
+        LoanTerm: "Loan Term",
+        DTIRatio: "DTI Ratio",
+        Education: "Education",
+        EmploymentType: "Employment Type",
+        MaritalStatus: "Marital Status",
+        HasMortgage: "Has Mortgage",
+        HasDependents: "Has Dependents",
+        LoanPurpose: "Loan Purpose",
+        HasCoSigner: "Has Co-Signer",
+      };
+
+      const fallbackFeatureOrder = Object.keys(featureNameMap);
+      const formatFeatureName = (rawName) => {
+        if (featureNameMap[rawName]) return featureNameMap[rawName];
+        const match = String(rawName).match(/^feature_(\d+)$/i);
+        if (match) {
+          const idx = Number(match[1]);
+          const fallback = fallbackFeatureOrder[idx] || fallbackFeatureOrder[idx - 1];
+          if (fallback) return featureNameMap[fallback];
+        }
+        return String(rawName).replace(/_/g, " ");
+      };
+
+      try {
+        const response = await predictLoanService(payload);
+        const prediction = response.data?.prediction || {};
+        const analysis = response.data?.analysis || {};
+
+        const approvalProbability = Number(prediction.probability_approval || 0);
+        const score = Math.round(300 + approvalProbability * 550);
+        const backendStatus = String(analysis.status || "").toLowerCase();
+        const mappedStatus =
+          backendStatus === "approved"
+            ? "approved"
+            : backendStatus === "rejected"
+            ? "declined"
+            : "manual";
+
+        const riskCategory = String(prediction.risk_category || "").toLowerCase();
+        const mappedCategory =
+          riskCategory.includes("low")
+            ? "green"
+            : riskCategory.includes("medium")
+            ? "yellow"
+            : riskCategory.includes("high")
+            ? "red"
+            : null;
+
+        const riskSignals = analysis.risk_factors || {};
+        const decreasingRisk = new Set(riskSignals.decreasing_risk || []);
+
+        const topFeatures = Object.entries(prediction.feature_importance || {})
+          .slice(0, 5)
+          .map(([name, value], idx) => ({
+            name: formatFeatureName(name),
+            impact: idx < 2 ? "high" : idx < 4 ? "medium" : "low",
+            positive: decreasingRisk.has(name),
+            description: `Model influence: ${Number(value).toFixed(2)}%`,
+          }));
+
+        const improvements = String(analysis.improvements_needed || "")
+          .split("\n")
+          .map((line) => line.trim())
+          .filter(Boolean)
+          .slice(0, 5)
+          .map((line, idx) => ({
+            title: `Recommendation ${idx + 1}`,
+            description: line.replace(/^\d+[\).\s-]*/, ""),
+          }));
+
+        dispatch(submitApplicationSuccess());
+        dispatch(setDecisionData({
+          applicationId: analysis.database_id || `APP-${Math.floor(Math.random() * 10000)}-X4`,
+          score: Number.isFinite(score) ? score : 650,
+          status: mappedStatus,
+          category: mappedCategory,
+          message: analysis.message || "",
+          riskCategory: prediction.risk_category || "",
+          probabilityApproval: prediction.probability_approval,
+          probabilityDefault: prediction.probability_default,
+          rejectionReasons: analysis.rejection_reasons || "",
+          features: topFeatures.length ? topFeatures : [
+            { name: "Model Analysis", impact: "medium", positive: true, description: analysis.message || "Prediction completed." },
+          ],
+          suggestions: improvements.length ? improvements : [
+            { title: "Application Summary", description: analysis.message || "Prediction completed successfully." },
+          ],
+        }));
+        navigate('/decision');
+      } catch (error) {
+        dispatch(
+          submitApplicationFailure(
+            error?.response?.data?.error || error?.message || "Prediction failed"
+          )
+        );
         dispatch(setDecisionLoading(false));
-        return;
       }
-
-      dispatch(submitApplicationSuccess());
-
-      const income = Number(formData.income) || 0;
-      const debtAmount = Number(formData.loanAmount) || 0;
-      let baseScore = 600;
-      baseScore += (income / 1000) * 1.5;
-      baseScore -= (debtAmount / 1000) * 2;
-      const finalScore = Math.min(Math.max(Math.round(baseScore), 300), 850);
-
-      dispatch(setDecisionData({
-        applicationId: result.data?._id || `APP-${Math.floor(Math.random() * 10000)}-X4`,
-        score: finalScore,
-        features: [
-          { name: 'Income to Debt Ratio', impact: 'high', positive: income > debtAmount * 2, description: income > debtAmount * 2 ? 'Your current income comfortably covers existing debts.' : 'Your requested loan poses a high ratio strain.' },
-          { name: 'Credit History Length', impact: 'medium', positive: true, description: 'A long, established credit history shows a consistent pattern.' },
-        ],
-        suggestions: [
-          { title: 'Reduce Credit Card Balances', description: 'Lowering your credit utilization could boost your score further.' }
-        ]
-      }));
-      navigate('/decision');
     }
   };
 
@@ -154,35 +293,104 @@ const LoanApplicationForm = () => {
               {currentStep === 0 && (
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <Input label="First Name" value={formData.firstName} onChange={(e) => handleChange('firstName', e.target.value)} />
-                    <Input label="Last Name" value={formData.lastName} onChange={(e) => handleChange('lastName', e.target.value)} />
+                    <Input label="Age" type="number" value={formData.Age} onChange={(e) => handleChange('Age', e.target.value)} />
                   </div>
-                  <Input label="Email Address" type="email" value={formData.email} onChange={(e) => handleChange('email', e.target.value)} />
+                  <Input label="Income" type="number" value={formData.Income} onChange={(e) => handleChange('Income', e.target.value)} />
+                  <Input label="LoanAmount" type="number" value={formData.LoanAmount} onChange={(e) => handleChange('LoanAmount', e.target.value)} />
+                  <Input label="CreditScore" type="number" value={formData.CreditScore} onChange={(e) => handleChange('CreditScore', e.target.value)} />
                 </div>
               )}
 
               {currentStep === 1 && (
                 <div className="space-y-4">
-                  <Input label="Annual Income ($)" type="number" value={formData.income} onChange={(e) => handleChange('income', e.target.value)} />
-                  <div className="mb-6">
-                    <label className="block text-[13px] font-[800] text-slate-700 mb-2 uppercase tracking-wide">Employment Status</label>
-                    <select
-                      className="w-full px-5 py-4 rounded-[12px] border border-[#e2e8f0] focus:border-primary-500 outline-none bg-[#f8fafc] focus:bg-white text-[#0f172a] font-[500] text-[15px] transition-all"
-                      value={formData.employmentStatus}
-                      onChange={(e) => handleChange('employmentStatus', e.target.value)}
-                    >
-                      <option value="employed">Employed Full-Time</option>
-                      <option value="self-employed">Self-Employed</option>
-                      <option value="unemployed">Unemployed</option>
-                    </select>
-                  </div>
+                  <Input label="MonthsEmployed" type="number" value={formData.MonthsEmployed} onChange={(e) => handleChange('MonthsEmployed', e.target.value)} />
+                  <Input label="NumCreditLines" type="number" value={formData.NumCreditLines} onChange={(e) => handleChange('NumCreditLines', e.target.value)} />
+                  <Input label="InterestRate" type="number" value={formData.InterestRate} onChange={(e) => handleChange('InterestRate', e.target.value)} />
+                  <Input label="LoanTerm" type="number" value={formData.LoanTerm} onChange={(e) => handleChange('LoanTerm', e.target.value)} />
+                  <Input label="DTIRatio" type="number" value={formData.DTIRatio} onChange={(e) => handleChange('DTIRatio', e.target.value)} />
                 </div>
               )}
 
               {currentStep === 2 && (
                 <div className="space-y-4">
-                  <Input label="Requested Loan Amount ($)" type="number" value={formData.loanAmount} onChange={(e) => handleChange('loanAmount', e.target.value)} />
-                  <Input label="Primary Purpose" placeholder="Debt consolidation, Home repair..." value={formData.purpose} onChange={(e) => handleChange('purpose', e.target.value)} />
+                  <SelectField
+                    label="Education"
+                    value={formData.Education}
+                    onChange={(e) => handleChange('Education', e.target.value)}
+                    options={[
+                      { label: "Select Education", value: "" },
+                      { label: "High School", value: "High School" },
+                      { label: "Bachelor's", value: "Bachelor's" },
+                      { label: "Master's", value: "Master's" },
+                      { label: "PhD", value: "PhD" },
+                    ]}
+                  />
+                  <SelectField
+                    label="EmploymentType"
+                    value={formData.EmploymentType}
+                    onChange={(e) => handleChange('EmploymentType', e.target.value)}
+                    options={[
+                      { label: "Select Employment Type", value: "" },
+                      { label: "Full-time", value: "Full-time" },
+                      { label: "Part-time", value: "Part-time" },
+                      { label: "Self-employed", value: "Self-employed" },
+                      { label: "Unemployed", value: "Unemployed" },
+                    ]}
+                  />
+                  <SelectField
+                    label="MaritalStatus"
+                    value={formData.MaritalStatus}
+                    onChange={(e) => handleChange('MaritalStatus', e.target.value)}
+                    options={[
+                      { label: "Select Marital Status", value: "" },
+                      { label: "Single", value: "Single" },
+                      { label: "Married", value: "Married" },
+                      { label: "Divorced", value: "Divorced" },
+                    ]}
+                  />
+                  <SelectField
+                    label="HasMortgage"
+                    value={formData.HasMortgage}
+                    onChange={(e) => handleChange('HasMortgage', e.target.value)}
+                    options={[
+                      { label: "Select", value: "" },
+                      { label: "No", value: "No" },
+                      { label: "Yes", value: "Yes" },
+                    ]}
+                  />
+                  <SelectField
+                    label="HasDependents"
+                    value={formData.HasDependents}
+                    onChange={(e) => handleChange('HasDependents', e.target.value)}
+                    options={[
+                      { label: "Select", value: "" },
+                      { label: "No", value: "No" },
+                      { label: "Yes", value: "Yes" },
+                    ]}
+                  />
+                  <SelectField
+                    label="LoanPurpose"
+                    value={formData.LoanPurpose}
+                    onChange={(e) => handleChange('LoanPurpose', e.target.value)}
+                    options={[
+                      { label: "Select Loan Purpose", value: "" },
+                      { label: "Home", value: "Home" },
+                      { label: "Education", value: "Education" },
+                      { label: "Auto", value: "Auto" },
+                      { label: "Business", value: "Business" },
+                      { label: "Other", value: "Other" },
+                    ]}
+                  />
+                  <SelectField
+                    label="HasCoSigner"
+                    value={formData.HasCoSigner}
+                    onChange={(e) => handleChange('HasCoSigner', e.target.value)}
+                    options={[
+                      { label: "Select", value: "" },
+                      { label: "No", value: "No" },
+                      { label: "Yes", value: "Yes" },
+                    ]}
+                  />
                 </div>
               )}
             </motion.div>
@@ -208,6 +416,9 @@ const LoanApplicationForm = () => {
             {currentStep !== steps.length - 1 && <ChevronRight className="w-5 h-5 ml-2" />}
           </button>
         </div>
+        {error && (
+          <p className="mt-4 text-sm font-semibold text-red-600 text-right">{error}</p>
+        )}
       </div>
     </div>
   );

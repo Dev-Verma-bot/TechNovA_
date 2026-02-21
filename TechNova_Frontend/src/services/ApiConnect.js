@@ -4,7 +4,14 @@ const buildUrl = (url, params) => {
   return query ? `${url}?${query}` : url;
 };
 
-export const apiConnector = async (method, url, bodyData, headers, params) => {
+export const apiConnector = async (
+  method,
+  url,
+  bodyData,
+  headers,
+  params,
+  options = {}
+) => {
   const response = await fetch(buildUrl(url, params), {
     method,
     headers: {
@@ -12,7 +19,7 @@ export const apiConnector = async (method, url, bodyData, headers, params) => {
       ...(headers || {}),
     },
     body: bodyData ? JSON.stringify(bodyData) : undefined,
-    credentials: "include",
+    credentials: options.credentials || "include",
   });
 
   const contentType = response.headers.get("content-type") || "";
