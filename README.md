@@ -1,4 +1,4 @@
-![CredNova Explainable AI Hero Image](./images/crednova_hero.png)
+![CredNova Explainable AI Hero Image](./image/crednova_hero.png)
 
 # TechNova: AI-Powered Loan Decision & Analytics Platform
 
