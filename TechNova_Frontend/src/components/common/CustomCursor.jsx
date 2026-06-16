@@ -7,51 +7,61 @@ const CustomCursor = () => {
     const cursorRef = useRef(null);
 
     useEffect(() => {
-        // Media query to check if device supports hover
         const isTouchDevice = window.matchMedia('(hover: none) and (pointer: coarse)').matches;
         if (isTouchDevice) return;
 
         const cursor = cursorRef.current;
         if (!cursor) return;
 
-        // Use quickTo for high performance following (like native speed with a buttery tail).
-        // duration > 0 adds that GSAP website "smooth trailing" delay property.
+        // Enable custom cursor globally on mount
+        document.documentElement.classList.add('has-custom-cursor');
+
         const xTo = gsap.quickTo(cursor, 'x', { duration: 0.12, ease: 'power3.out' });
         const yTo = gsap.quickTo(cursor, 'y', { duration: 0.12, ease: 'power3.out' });
 
-        // Initialize state
         gsap.set(cursor, { x: window.innerWidth / 2, y: window.innerHeight / 2, opacity: 0 });
 
         const onMouseMove = (e) => {
             if (gsap.getProperty(cursor, "opacity") === 0) {
-                gsap.to(cursor, { opacity: 1, duration: 0.3 });
+                gsap.to(cursor, { opacity: 1, duration: 0.2 });
             }
-            // Offset precisely by the SVG arrow tip so clicks actually trigger on perfectly underneath elements
             xTo(e.clientX - 4.1);
             yTo(e.clientY - 3.5);
         };
 
         const handleMouseLeave = () => {
             gsap.to(cursor, { opacity: 0, duration: 0.1 });
+            document.documentElement.classList.remove('has-custom-cursor');
         };
 
         const handleMouseEnter = () => {
             gsap.to(cursor, { opacity: 1, duration: 0.1 });
+            document.documentElement.classList.add('has-custom-cursor');
+        };
+
+        const handleWindowBlur = () => {
+            gsap.to(cursor, { opacity: 0, duration: 0.1 });
+            document.documentElement.classList.remove('has-custom-cursor');
+        };
+
+        const handleWindowFocus = () => {
+            document.documentElement.classList.add('has-custom-cursor');
         };
 
         window.addEventListener('mousemove', onMouseMove);
         document.addEventListener('mouseleave', handleMouseLeave);
         document.addEventListener('mouseenter', handleMouseEnter);
+        window.addEventListener('blur', handleWindowBlur);
+        window.addEventListener('focus', handleWindowFocus);
 
-        // Interactive states when hovering clickable items universally
         const handleMouseOver = (e) => {
             const target = e.target.closest('a, button, input, textarea, select, .cursor-pointer, [role="button"]');
             if (target) {
                 gsap.to(cursor, {
-                    scale: 0.85,    // Compress the arrow on hover
-                    rotate: -8,     // Angle up dynamically
-                    // duration: 1.9,
-                    ease: 'back.out(1.5)'
+                    scale: 0.85,
+                    rotate: -8,
+                    ease: 'back.out(1.5)',
+                    duration: 0.2
                 });
             }
         };
@@ -72,9 +82,15 @@ const CustomCursor = () => {
         window.addEventListener('mouseout', handleMouseOut);
 
         return () => {
+            // Clean up class and listeners on unmount
+            document.documentElement.classList.remove('has-custom-cursor');
+            gsap.killTweensOf(cursor);
+            
             window.removeEventListener('mousemove', onMouseMove);
             document.removeEventListener('mouseleave', handleMouseLeave);
             document.removeEventListener('mouseenter', handleMouseEnter);
+            window.removeEventListener('blur', handleWindowBlur);
+            window.removeEventListener('focus', handleWindowFocus);
             window.removeEventListener('mouseover', handleMouseOver);
             window.removeEventListener('mouseout', handleMouseOut);
         };

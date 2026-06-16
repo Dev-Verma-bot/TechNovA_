@@ -373,42 +373,43 @@ const LoanApplicationForm = () => {
               transition={{ duration: 0.2 }}
             >
               {currentStep === 0 && (
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <Input label="Age" type="number" value={formData.Age} onChange={(e) => handleChange('Age', e.target.value)} />
-                  </div>
-                  <Input label="Income" type="number" value={formData.Income} onChange={(e) => handleChange('Income', e.target.value)} />
-                  <Input label="LoanAmount" type="number" value={formData.LoanAmount} onChange={(e) => handleChange('LoanAmount', e.target.value)} />
-                  <Input label="CreditScore" type="number" value={formData.CreditScore} onChange={(e) => handleChange('CreditScore', e.target.value)} />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <Input label="Age (Years)" type="number" placeholder="e.g. 35" value={formData.Age} onChange={(e) => handleChange('Age', e.target.value)} />
+                  <Input label="Credit Score" type="number" placeholder="e.g. 700" value={formData.CreditScore} onChange={(e) => handleChange('CreditScore', e.target.value)} />
+                  <Input label="Annual Income (INR)" type="number" placeholder="e.g. 600000" value={formData.Income} onChange={(e) => handleChange('Income', e.target.value)} />
+                  <Input label="Requested Loan Amount (INR)" type="number" placeholder="e.g. 200000" value={formData.LoanAmount} onChange={(e) => handleChange('LoanAmount', e.target.value)} />
                 </div>
               )}
 
               {currentStep === 1 && (
-                <div className="space-y-4">
-                  <Input label="MonthsEmployed" type="number" value={formData.MonthsEmployed} onChange={(e) => handleChange('MonthsEmployed', e.target.value)} />
-                  <Input label="NumCreditLines" type="number" value={formData.NumCreditLines} onChange={(e) => handleChange('NumCreditLines', e.target.value)} />
-                  <Input label="InterestRate" type="number" value={formData.InterestRate} onChange={(e) => handleChange('InterestRate', e.target.value)} />
-                  <Input label="LoanTerm" type="number" value={formData.LoanTerm} onChange={(e) => handleChange('LoanTerm', e.target.value)} />
-                  <Input
-                    label="DTIRatio"
-                    type="number"
-                    min={0}
-                    max={1}
-                    step="0.01"
-                    value={formData.DTIRatio}
-                    onChange={(e) => handleChange('DTIRatio', e.target.value)}
-                  />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <Input label="Months Employed" type="number" placeholder="e.g. 24" value={formData.MonthsEmployed} onChange={(e) => handleChange('MonthsEmployed', e.target.value)} />
+                  <Input label="Number of Credit Lines" type="number" placeholder="e.g. 3" value={formData.NumCreditLines} onChange={(e) => handleChange('NumCreditLines', e.target.value)} />
+                  <Input label="Interest Rate (%)" type="number" placeholder="e.g. 7.5" step="0.1" value={formData.InterestRate} onChange={(e) => handleChange('InterestRate', e.target.value)} />
+                  <Input label="Loan Term (Months)" type="number" placeholder="e.g. 36" value={formData.LoanTerm} onChange={(e) => handleChange('LoanTerm', e.target.value)} />
+                  <div className="sm:col-span-2">
+                    <Input
+                      label="Debt-to-Income (DTI) Ratio"
+                      type="number"
+                      min={0}
+                      max={1}
+                      step="0.01"
+                      placeholder="e.g. 0.35 (ranges from 0.0 to 1.0)"
+                      value={formData.DTIRatio}
+                      onChange={(e) => handleChange('DTIRatio', e.target.value)}
+                    />
+                  </div>
                 </div>
               )}
 
               {currentStep === 2 && (
-                <div className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <SelectField
-                    label="Education"
+                    label="Education Level"
                     value={formData.Education}
                     onChange={(e) => handleChange('Education', e.target.value)}
                     options={[
-                      { label: 'Select Education', value: '' },
+                      { label: 'Select Education Level', value: '' },
                       { label: 'High School', value: 'High School' },
                       { label: "Bachelor's", value: "Bachelor's" },
                       { label: "Master's", value: "Master's" },
@@ -416,7 +417,7 @@ const LoanApplicationForm = () => {
                     ]}
                   />
                   <SelectField
-                    label="EmploymentType"
+                    label="Employment Type"
                     value={formData.EmploymentType}
                     onChange={(e) => handleChange('EmploymentType', e.target.value)}
                     options={[
@@ -427,7 +428,7 @@ const LoanApplicationForm = () => {
                     ]}
                   />
                   <SelectField
-                    label="MaritalStatus"
+                    label="Marital Status"
                     value={formData.MaritalStatus}
                     onChange={(e) => handleChange('MaritalStatus', e.target.value)}
                     options={[
@@ -438,27 +439,7 @@ const LoanApplicationForm = () => {
                     ]}
                   />
                   <SelectField
-                    label="HasMortgage"
-                    value={formData.HasMortgage}
-                    onChange={(e) => handleChange('HasMortgage', e.target.value)}
-                    options={[
-                      { label: 'Select', value: '' },
-                      { label: 'No', value: 'No' },
-                      { label: 'Yes', value: 'Yes' },
-                    ]}
-                  />
-                  <SelectField
-                    label="HasDependents"
-                    value={formData.HasDependents}
-                    onChange={(e) => handleChange('HasDependents', e.target.value)}
-                    options={[
-                      { label: 'Select', value: '' },
-                      { label: 'No', value: 'No' },
-                      { label: 'Yes', value: 'Yes' },
-                    ]}
-                  />
-                  <SelectField
-                    label="LoanPurpose"
+                    label="Loan Purpose"
                     value={formData.LoanPurpose}
                     onChange={(e) => handleChange('LoanPurpose', e.target.value)}
                     options={[
@@ -471,15 +452,37 @@ const LoanApplicationForm = () => {
                     ]}
                   />
                   <SelectField
-                    label="HasCoSigner"
-                    value={formData.HasCoSigner}
-                    onChange={(e) => handleChange('HasCoSigner', e.target.value)}
+                    label="Do you have a Mortgage?"
+                    value={formData.HasMortgage}
+                    onChange={(e) => handleChange('HasMortgage', e.target.value)}
                     options={[
-                      { label: 'Select', value: '' },
+                      { label: 'Select Option', value: '' },
                       { label: 'No', value: 'No' },
                       { label: 'Yes', value: 'Yes' },
                     ]}
                   />
+                  <SelectField
+                    label="Do you have Dependents?"
+                    value={formData.HasDependents}
+                    onChange={(e) => handleChange('HasDependents', e.target.value)}
+                    options={[
+                      { label: 'Select Option', value: '' },
+                      { label: 'No', value: 'No' },
+                      { label: 'Yes', value: 'Yes' },
+                    ]}
+                  />
+                  <div className="sm:col-span-2">
+                    <SelectField
+                      label="Do you have a Co-Signer?"
+                      value={formData.HasCoSigner}
+                      onChange={(e) => handleChange('HasCoSigner', e.target.value)}
+                      options={[
+                        { label: 'Select Option', value: '' },
+                        { label: 'No', value: 'No' },
+                        { label: 'Yes', value: 'Yes' },
+                      ]}
+                    />
+                  </div>
                 </div>
               )}
             </motion.div>

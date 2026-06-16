@@ -1,7 +1,7 @@
 /* src/components/common/CustomCursor.css */
 
 @media (hover: hover) and (pointer: fine) {
-    * {
+    .has-custom-cursor, .has-custom-cursor * {
         cursor: none !important;
     }
 
