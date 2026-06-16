@@ -5,7 +5,7 @@ import json
 
 class DatabaseManager:
     def __init__(self):
-        self.client = MongoClient('mongodb+srv://rapellysaivinil_db_user:JFEli1Gz2KRtPbYV@cluster0.feutxpe.mongodb.net/')
+        self.client = MongoClient(Config.MONGO_URI)
         self.db = self.client[Config.DB_NAME]
         self.applications = self.db[Config.APPLICATIONS_COLLECTION]
     

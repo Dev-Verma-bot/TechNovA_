@@ -6,6 +6,7 @@ class Config:
     PREPROCESSOR_PATH = 'preprocessor.pkl'
     
     # Database configuration
+    MONGO_URI = os.getenv('MONGO_URI', 'mongodb+srv://rapellysaivinil_db_user:JFEli1Gz2KRtPbYV@cluster0.feutxpe.mongodb.net/')
     DB_NAME = 'loan_management'
     APPLICATIONS_COLLECTION = 'applications'
     
