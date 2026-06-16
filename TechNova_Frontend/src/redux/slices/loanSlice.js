@@ -11,6 +11,7 @@ const initialState = {
         InterestRate: '',
         LoanTerm: '',
         DTIRatio: '',
+        MonthlyDebt: '',
         Education: '',
         EmploymentType: '',
         MaritalStatus: '',

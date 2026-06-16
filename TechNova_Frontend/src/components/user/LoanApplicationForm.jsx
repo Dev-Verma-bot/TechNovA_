@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronRight, ChevronLeft, CheckCircle, Shield } from 'lucide-react';
+import { ChevronRight, ChevronLeft, CheckCircle, Shield, Info } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { predictLoanService, submitLoanService } from '../../services/Operations';
 
@@ -36,13 +36,29 @@ const Input = ({
   min,
   max,
   step,
+  helperText,
 }) => (
   <div className="mb-6">
-    <label className="block text-[13px] font-[800] text-slate-700 mb-2 uppercase tracking-wide">{label}</label>
+    <label className="block text-[13px] font-[800] text-slate-700 mb-2 uppercase tracking-wide flex items-center justify-between">
+      <span>{label}</span>
+      {readOnly && (
+        <span className="text-[10px] bg-primary-50 text-primary-600 font-[800] px-2 py-0.5 rounded-full uppercase tracking-wider scale-95 origin-right">
+          Auto
+        </span>
+      )}
+    </label>
     <div className="relative">
       <input
         type={type}
-        className={`w-full px-5 py-4 rounded-[12px] border ${error ? 'border-red-500 focus:ring-red-500' : 'border-[#e2e8f0] focus:border-primary-500 focus:ring-primary-500'} focus:ring-1 outline-none transition-all bg-[#f8fafc] focus:bg-white text-[#0f172a] font-[500] text-[15px] placeholder:text-slate-400`}
+        className={`w-full px-5 py-4 rounded-[12px] border ${
+          error 
+            ? 'border-red-500 focus:ring-red-500' 
+            : 'border-[#e2e8f0] focus:border-primary-500 focus:ring-primary-500'
+        } focus:ring-1 outline-none transition-all ${
+          readOnly 
+            ? 'bg-slate-100/65 text-slate-500 cursor-not-allowed border-slate-200' 
+            : 'bg-[#f8fafc] focus:bg-white text-[#0f172a]'
+        } font-[500] text-[15px] placeholder:text-slate-400`}
         placeholder={placeholder}
         value={value || ''}
         onChange={onChange}
@@ -53,6 +69,12 @@ const Input = ({
         required={!readOnly}
       />
       {error && <p className="mt-2 text-[13px] font-[600] text-red-500">{error}</p>}
+      {helperText && (
+        <p className="mt-2 text-[12px] font-[500] text-slate-400 flex items-center gap-1.5">
+          <Info className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+          <span>{helperText}</span>
+        </p>
+      )}
     </div>
   </div>
 );
@@ -88,6 +110,30 @@ const LoanApplicationForm = () => {
   const handleChange = (field, value) => {
     dispatch(updateFormData({ [field]: value }));
   };
+
+  // Auto-calculate DTI Ratio
+  React.useEffect(() => {
+    const income = parseFloat(formData.Income);
+    const monthlyDebt = parseFloat(formData.MonthlyDebt);
+
+    if (!isNaN(income) && income > 0 && !isNaN(monthlyDebt) && monthlyDebt >= 0) {
+      const monthlyIncome = income / 12;
+      const dti = monthlyDebt / monthlyIncome;
+      // Clamp between 0.0 and 1.0, round to 2 decimal places
+      const clampedDTI = Math.min(1.0, Math.max(0.0, dti));
+      const roundedDTI = parseFloat(clampedDTI.toFixed(2));
+      
+      // Update form data if it changed
+      if (formData.DTIRatio !== roundedDTI.toString() && formData.DTIRatio !== roundedDTI) {
+        handleChange('DTIRatio', roundedDTI.toString());
+      }
+    } else {
+      // If either field is empty/invalid, clear DTIRatio
+      if (formData.DTIRatio !== '') {
+        handleChange('DTIRatio', '');
+      }
+    }
+  }, [formData.Income, formData.MonthlyDebt]);
 
   const parseProbability = (value) => {
     if (value === null || value === undefined || value === '') return null;
