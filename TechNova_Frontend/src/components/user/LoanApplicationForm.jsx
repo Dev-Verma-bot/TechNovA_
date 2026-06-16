@@ -433,18 +433,24 @@ const LoanApplicationForm = () => {
                   <Input label="Number of Credit Lines" type="number" placeholder="e.g. 3" value={formData.NumCreditLines} onChange={(e) => handleChange('NumCreditLines', e.target.value)} />
                   <Input label="Interest Rate (%)" type="number" placeholder="e.g. 7.5" step="0.1" value={formData.InterestRate} onChange={(e) => handleChange('InterestRate', e.target.value)} />
                   <Input label="Loan Term (Months)" type="number" placeholder="e.g. 36" value={formData.LoanTerm} onChange={(e) => handleChange('LoanTerm', e.target.value)} />
-                  <div className="sm:col-span-2">
-                    <Input
-                      label="Debt-to-Income (DTI) Ratio"
-                      type="number"
-                      min={0}
-                      max={1}
-                      step="0.01"
-                      placeholder="e.g. 0.35 (ranges from 0.0 to 1.0)"
-                      value={formData.DTIRatio}
-                      onChange={(e) => handleChange('DTIRatio', e.target.value)}
-                    />
-                  </div>
+                  <Input 
+                    label="Total Monthly Debt Payments (INR)" 
+                    type="number" 
+                    placeholder="e.g. 15000" 
+                    value={formData.MonthlyDebt} 
+                    onChange={(e) => handleChange('MonthlyDebt', e.target.value)} 
+                  />
+                  <Input
+                    label="Debt-to-Income (DTI) Ratio"
+                    type="number"
+                    min={0}
+                    max={1}
+                    step="0.01"
+                    placeholder="Auto-calculated (ranges from 0.0 to 1.0)"
+                    value={formData.DTIRatio}
+                    readOnly={true}
+                    helperText="Calculated using: Monthly Debt / (Annual Income / 12)"
+                  />
                 </div>
               )}
 

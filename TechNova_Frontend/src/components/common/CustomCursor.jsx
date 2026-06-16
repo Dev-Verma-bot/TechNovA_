@@ -13,46 +13,62 @@ const CustomCursor = () => {
         const cursor = cursorRef.current;
         if (!cursor) return;
 
-        // Enable custom cursor globally on mount
-        document.documentElement.classList.add('has-custom-cursor');
-
-        const xTo = gsap.quickTo(cursor, 'x', { duration: 0.12, ease: 'power3.out' });
-        const yTo = gsap.quickTo(cursor, 'y', { duration: 0.12, ease: 'power3.out' });
-
+        // Start hidden, default system cursor visible
         gsap.set(cursor, { x: window.innerWidth / 2, y: window.innerHeight / 2, opacity: 0 });
 
+        const xTo = gsap.quickTo(cursor, 'x', { duration: 0.08, ease: 'power3.out' });
+        const yTo = gsap.quickTo(cursor, 'y', { duration: 0.08, ease: 'power3.out' });
+
+        let isVisible = false;
+
         const onMouseMove = (e) => {
-            if (gsap.getProperty(cursor, "opacity") === 0) {
-                gsap.to(cursor, { opacity: 1, duration: 0.2 });
+            if (
+                typeof e.clientX !== 'number' ||
+                typeof e.clientY !== 'number' ||
+                isNaN(e.clientX) ||
+                isNaN(e.clientY)
+            ) {
+                return;
             }
+
+            // Update positions first to avoid cursor jumping from (0,0)
             xTo(e.clientX - 4.1);
             yTo(e.clientY - 3.5);
+
+            if (!isVisible) {
+                isVisible = true;
+                document.documentElement.classList.add('has-custom-cursor');
+                gsap.to(cursor, { opacity: 1, duration: 0.15, overwrite: 'auto' });
+            }
+        };
+
+        const deactivateCursor = () => {
+            if (isVisible) {
+                isVisible = false;
+                document.documentElement.classList.remove('has-custom-cursor');
+                gsap.to(cursor, { opacity: 0, duration: 0.1, overwrite: 'auto' });
+            }
         };
 
         const handleMouseLeave = () => {
-            gsap.to(cursor, { opacity: 0, duration: 0.1 });
-            document.documentElement.classList.remove('has-custom-cursor');
+            deactivateCursor();
         };
 
-        const handleMouseEnter = () => {
-            gsap.to(cursor, { opacity: 1, duration: 0.1 });
-            document.documentElement.classList.add('has-custom-cursor');
+        const handleMouseEnter = (e) => {
+            if (e && typeof e.clientX === 'number' && typeof e.clientY === 'number' && !isNaN(e.clientX)) {
+                xTo(e.clientX - 4.1);
+                yTo(e.clientY - 3.5);
+            }
         };
 
         const handleWindowBlur = () => {
-            gsap.to(cursor, { opacity: 0, duration: 0.1 });
-            document.documentElement.classList.remove('has-custom-cursor');
+            deactivateCursor();
         };
 
-        const handleWindowFocus = () => {
-            document.documentElement.classList.add('has-custom-cursor');
-        };
-
-        window.addEventListener('mousemove', onMouseMove);
+        window.addEventListener('mousemove', onMouseMove, { passive: true });
         document.addEventListener('mouseleave', handleMouseLeave);
         document.addEventListener('mouseenter', handleMouseEnter);
         window.addEventListener('blur', handleWindowBlur);
-        window.addEventListener('focus', handleWindowFocus);
 
         const handleMouseOver = (e) => {
             const target = e.target.closest('a, button, input, textarea, select, .cursor-pointer, [role="button"]');
@@ -61,7 +77,8 @@ const CustomCursor = () => {
                     scale: 0.85,
                     rotate: -8,
                     ease: 'back.out(1.5)',
-                    duration: 0.2
+                    duration: 0.2,
+                    overwrite: 'auto'
                 });
             }
         };
@@ -72,17 +89,17 @@ const CustomCursor = () => {
                 gsap.to(cursor, {
                     scale: 1,
                     rotate: 0,
-                    duration: 0.1,
-                    ease: 'power2.out'
+                    duration: 0.15,
+                    ease: 'power2.out',
+                    overwrite: 'auto'
                 });
             }
         };
 
-        window.addEventListener('mouseover', handleMouseOver);
-        window.addEventListener('mouseout', handleMouseOut);
+        window.addEventListener('mouseover', handleMouseOver, { passive: true });
+        window.addEventListener('mouseout', handleMouseOut, { passive: true });
 
         return () => {
-            // Clean up class and listeners on unmount
             document.documentElement.classList.remove('has-custom-cursor');
             gsap.killTweensOf(cursor);
             
@@ -90,7 +107,6 @@ const CustomCursor = () => {
             document.removeEventListener('mouseleave', handleMouseLeave);
             document.removeEventListener('mouseenter', handleMouseEnter);
             window.removeEventListener('blur', handleWindowBlur);
-            window.removeEventListener('focus', handleWindowFocus);
             window.removeEventListener('mouseover', handleMouseOver);
             window.removeEventListener('mouseout', handleMouseOut);
         };
