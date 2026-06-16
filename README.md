@@ -1,3 +1,5 @@
+![CredNova Explainable AI Hero Image](file:///C:/Users/harry/.gemini/antigravity/brain/64c08630-4772-4c3b-82fc-da8f769d7e08/media__1781586167690.png)
+
 # TechNova: AI-Powered Loan Decision & Analytics Platform
 
 TechNova is an advanced, enterprise-grade AI-powered financial platform that automates loan applications, evaluates credit default risk using Deep Learning models, explains decisions using LangGraph agentic workflows, and analyzes demographic fairness.
