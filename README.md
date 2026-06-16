@@ -1,4 +1,4 @@
-![CredNova Explainable AI Hero Image](file:///C:/Users/harry/.gemini/antigravity/brain/64c08630-4772-4c3b-82fc-da8f769d7e08/media__1781586167690.png)
+![CredNova Explainable AI Hero Image](./images/crednova_hero.png)
 
 # TechNova: AI-Powered Loan Decision & Analytics Platform
 
