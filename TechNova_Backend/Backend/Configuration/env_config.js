@@ -21,4 +21,6 @@ module.exports = {
   MAIL_HOST: clean(process.env.MAIL_HOST),
   MAIL_USER: clean(process.env.MAIL_USER),
   MAIL_PASS: clean(process.env.MAIL_PASS),
+  BREVO_API_KEY: clean(process.env.BREVO_API_KEY),
+  SENDER_EMAIL: clean(process.env.SENDER_EMAIL),
 };

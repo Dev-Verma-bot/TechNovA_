@@ -3,6 +3,8 @@ const {
   MAIL_HOST,
   MAIL_USER,
   MAIL_PASS,
+  BREVO_API_KEY,
+  SENDER_EMAIL,
 } = require("../Configuration/env_config");
 
 const getMailPort = () => {
@@ -37,9 +39,36 @@ const getTransporter = () => {
   });
 };
 
-exports.sendOtpEmail = async (email, otp, purpose = "verification") => {
-  const transporter = getTransporter();
+const sendViaBrevo = async (email, subject, text) => {
+  const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+    method: "POST",
+    headers: {
+      "accept": "application/json",
+      "api-key": BREVO_API_KEY,
+      "content-type": "application/json"
+    },
+    body: JSON.stringify({
+      sender: {
+        name: "CredNova",
+        email: SENDER_EMAIL || MAIL_USER || "no-reply@crednova.com"
+      },
+      to: [
+        {
+          email: email
+        }
+      ],
+      subject: subject,
+      textContent: text
+    })
+  });
 
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(`Brevo API Error: ${errorData.message || response.statusText}`);
+  }
+};
+
+exports.sendOtpEmail = async (email, otp, purpose = "verification") => {
   const subject =
     purpose === "password-reset"
       ? "Your password reset OTP"
@@ -50,6 +79,12 @@ exports.sendOtpEmail = async (email, otp, purpose = "verification") => {
       ? `Your password reset OTP is ${otp}. It expires in 10 minutes.`
       : `Your signup OTP is ${otp}. It expires in 10 minutes.`;
 
+  if (BREVO_API_KEY) {
+    await sendViaBrevo(email, subject, text);
+    return;
+  }
+
+  const transporter = getTransporter();
   await transporter.sendMail({
     from: MAIL_USER,
     to: email,
@@ -59,8 +94,6 @@ exports.sendOtpEmail = async (email, otp, purpose = "verification") => {
 };
 
 exports.sendSuccessEmail = async (email, purpose = "signup") => {
-  const transporter = getTransporter();
-
   const subject =
     purpose === "password-reset"
       ? "Password Reset Successful"
@@ -71,6 +104,12 @@ exports.sendSuccessEmail = async (email, purpose = "signup") => {
       ? "Your password has been reset successfully. If this was not you, contact support immediately."
       : "Your account was created successfully. Welcome to CredNova.";
 
+  if (BREVO_API_KEY) {
+    await sendViaBrevo(email, subject, text);
+    return;
+  }
+
+  const transporter = getTransporter();
   await transporter.sendMail({
     from: MAIL_USER,
     to: email,
@@ -78,4 +117,5 @@ exports.sendSuccessEmail = async (email, purpose = "signup") => {
     text,
   });
 };
+
 
